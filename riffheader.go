@@ -9,14 +9,13 @@ import (
 // RiffHeader is a Header carrying additional format information
 type RiffHeader struct {
 	*Header
-	FormatVal string `json:"format"`
-	format    uint32
+	format uint32
 }
 
 // NewRiffHeader creates a new RIFF header
 func NewRiffHeader(header *Header, format uint32) *RiffHeader {
 	riffHeader := &RiffHeader{Header: header, format: format}
-	riffHeader.FormatVal = convertFormat(format)
+	riffHeader.format = format
 
 	return riffHeader
 }
@@ -41,7 +40,16 @@ func DecodeRiffHeader(bytes []byte) (*RiffHeader, error) {
 
 // Format is a 4-letter format description
 func (rh *RiffHeader) Format() string {
-	return rh.FormatVal
+	val := make([]byte, 32)
+	binary.BigEndian.PutUint32(val, rh.format)
+
+	return trim(val)
+}
+
+// Size is the chunk size in bytes
+// not including: id (4 bytes), size (4 bytes) and format (4 bytes)
+func (rh *RiffHeader) Size() uint32 {
+	return rh.size - FormatSizeBytes
 }
 
 // FullSize is the chunk size in bytes
@@ -51,7 +59,7 @@ func (rh *RiffHeader) FullSize() uint32 {
 
 // String returns a stringrepresentation of header
 func (rh *RiffHeader) String() string {
-	return fmt.Sprintf("%s Format: %s", rh.Header, rh.Format())
+	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d Format: %s", rh.ID(), rh.Size(), rh.FullSize(), rh.StartPos(), rh.Format())
 }
 
 func isValidRiffHeader(bytes []byte) bool {
@@ -62,11 +70,4 @@ func isValidRiffHeader(bytes []byte) bool {
 	}
 
 	return true
-}
-
-func convertFormat(format uint32) string {
-	val := make([]byte, 32)
-	binary.BigEndian.PutUint32(val, format)
-
-	return trim(val)
 }
