@@ -18,7 +18,7 @@ func TestCreateRiffFile(t *testing.T) {
 	}
 
 	fileName := "sine.1sec.wav"
-	file, _ = openFile(fileName)
+	file, _ = OpenFile(fileName)
 
 	riffFile, err = CreateRiffFile(file)
 
