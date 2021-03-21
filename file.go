@@ -24,6 +24,11 @@ func CreateRiffFile(file *os.File) (*RiffFile, error) {
 	}
 
 	riffHeader, err := readRiffHeader(file)
+
+	if err != nil {
+		return nil, err
+	}
+
 	headers := readChunkHeaders(RiffHeaderSizeBytes, file, fileInfo.Size())
 	riffFile := NewRiffFile(file.Name(), riffHeader, headers)
 
@@ -83,9 +88,8 @@ func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
 }
 
 func readRiffHeader(file *os.File) (*RiffHeader, error) {
-	var offset uint32
 	headerBytes := make([]byte, RiffHeaderSizeBytes)
-	_, err := file.ReadAt(headerBytes, int64(offset))
+	_, err := file.ReadAt(headerBytes, 0)
 
 	if err != nil {
 		return nil, err
@@ -93,9 +97,5 @@ func readRiffHeader(file *os.File) (*RiffHeader, error) {
 
 	riffHeader, err := DecodeRiffHeader(headerBytes)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return riffHeader, nil
+	return riffHeader, err
 }

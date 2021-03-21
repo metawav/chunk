@@ -8,7 +8,7 @@ import (
 
 // ReadFile
 func ReadFile(name string) (*RiffFile, error) {
-	file, err := openFile(name)
+	file, err := OpenFile(name)
 
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func ReadFile(name string) (*RiffFile, error) {
 	return riffFile, err
 }
 
-func openFile(name string) (*os.File, error) {
+func OpenFile(name string) (*os.File, error) {
 	if !isFileExist(name) {
 		msg := fmt.Sprintf("file does not exist: %s", name)
 		return nil, errors.New(msg)
