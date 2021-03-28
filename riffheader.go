@@ -49,12 +49,12 @@ func (rh *RiffHeader) Format() string {
 // Size is the chunk size in bytes
 // not including: id (4 bytes), size (4 bytes) and format (4 bytes)
 func (rh *RiffHeader) Size() uint32 {
-	return rh.size - FormatSizeBytes
+	return rh.size
 }
 
 // FullSize is the chunk size in bytes
 func (rh *RiffHeader) FullSize() uint32 {
-	return rh.Header.Size() + RiffHeaderSizeBytes
+	return rh.Size() + HeaderSizeBytes
 }
 
 // String returns a stringrepresentation of header
