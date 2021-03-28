@@ -14,14 +14,22 @@ type Header struct {
 }
 
 // NewHeader creates a new header
-func NewHeader(id uint32, size uint32, offset uint32) *Header {
-	header := &Header{id: id, size: size, startPos: offset}
+func NewHeader(id uint32, size uint32, startPos uint32) *Header {
+	header := &Header{id: id, size: size, startPos: startPos}
+
+	return header
+}
+
+// EncodeChunkHeader encodes
+func EncodeChunkHeader(id [4]byte, size uint32, startPos uint32) *Header {
+	idVal := binary.BigEndian.Uint32(id[:])
+	header := NewHeader(idVal, size, startPos)
 
 	return header
 }
 
 // DecodeChunkHeader decodes chunk header from bytes
-func DecodeChunkHeader(bytes []byte, offset uint32) (*Header, error) {
+func DecodeChunkHeader(bytes []byte, startPos uint32) (*Header, error) {
 	if !isValidChunkHeader(bytes) {
 		msg := fmt.Sprintf("invalid header")
 		return nil, errors.New(msg)
@@ -30,7 +38,7 @@ func DecodeChunkHeader(bytes []byte, offset uint32) (*Header, error) {
 	id := binary.BigEndian.Uint32(bytes[:IDSizeBytes])
 	size := binary.LittleEndian.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
 
-	return NewHeader(id, size, offset), nil
+	return NewHeader(id, size, startPos), nil
 }
 
 // ID is a 4-letter chunk identifier
@@ -65,6 +73,15 @@ func isValidChunkHeader(bytes []byte) bool {
 	}
 
 	return true
+}
+
+// Bytes converts Header to  byte array
+func (h *Header) Bytes() []byte {
+	bytes := make([]byte, HeaderSizeBytes)
+	binary.BigEndian.PutUint32(bytes[:IDSizeBytes], h.id)
+	binary.LittleEndian.PutUint32(bytes[IDSizeBytes:IDSizeBytes+SizeSizeBytes], h.size)
+
+	return bytes
 }
 
 // String returns a stringrepresentation of header

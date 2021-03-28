@@ -1,8 +1,11 @@
 package wav
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -37,8 +40,8 @@ func CreateRiffFile(file *os.File) (*RiffFile, error) {
 	return riffFile, nil
 }
 
-// FileName returns the file name.
-func (rf *RiffFile) FileName() string {
+// Name returns the file name.
+func (rf *RiffFile) Name() string {
 	return rf.name
 }
 
@@ -115,7 +118,6 @@ func (rf *RiffFile) GetHeaderByID(headerID string) (*Header, error) {
 }
 
 func (rf *RiffFile) DeleteChunk(headerID string) error {
-	//todo: implement
 	header, err := rf.GetHeaderByID(headerID)
 
 	if err != nil {
@@ -125,11 +127,71 @@ func (rf *RiffFile) DeleteChunk(headerID string) error {
 
 	fmt.Printf("Deleting chunk %s\n", header.ID())
 
+	//todo: implement
+	// update riff header size
+	// update start pos of following headers
+	// use reader and writer interface to avoid dependency
+
 	return nil
 }
 
-func (rf *RiffFile) AddChunk(header *Header) error {
-	//todo: implement
-	fmt.Printf("Adding chunk %s", header.ID())
+// AddChunk
+func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
+	if bufferSize <= 0 {
+		bufferSize = 1024
+	}
+
+	// start writing chunk to end of file
+	offset := int64(rf.header.FullSize())
+	var chunkSize uint32 = 0
+
+	for {
+		b := make([]byte, bufferSize)
+		// todo: how to be sure it's a valid header?
+		n, err := reader.Read(b)
+
+		if n > 0 {
+			b = b[:n]
+			_, err := writer.WriteAt(b, offset)
+
+			if err != nil {
+				return err
+			}
+
+			offset += int64(n)
+			chunkSize += uint32(n)
+		}
+
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return err
+		}
+	}
+
+	riffSize := rf.header.size + chunkSize
+	err := rf.UpdateSize(riffSize, writer)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rf *RiffFile) UpdateSize(size uint32, writer io.WriterAt) error {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, size)
+
+	if err != nil {
+
+		return err
+	}
+
+	b := buf.Bytes()
+	writer.WriteAt(b, 4)
+
 	return nil
 }
