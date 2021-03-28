@@ -13,17 +13,10 @@ type Header struct {
 	startPos uint32
 }
 
-// NewHeader creates a new header
-func NewHeader(id uint32, size uint32, startPos uint32) *Header {
-	header := &Header{id: id, size: size, startPos: startPos}
-
-	return header
-}
-
 // EncodeChunkHeader encodes
-func EncodeChunkHeader(id [4]byte, size uint32, startPos uint32) *Header {
+func EncodeChunkHeader(id [4]byte, size uint32) *Header {
 	idVal := binary.BigEndian.Uint32(id[:])
-	header := NewHeader(idVal, size, startPos)
+	header := &Header{id: idVal, size: size}
 
 	return header
 }
@@ -37,8 +30,9 @@ func DecodeChunkHeader(bytes []byte, startPos uint32) (*Header, error) {
 
 	id := binary.BigEndian.Uint32(bytes[:IDSizeBytes])
 	size := binary.LittleEndian.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
+	header := &Header{id: id, size: size, startPos: startPos}
 
-	return NewHeader(id, size, startPos), nil
+	return header, nil
 }
 
 // ID is a 4-letter chunk identifier
