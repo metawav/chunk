@@ -1,6 +1,7 @@
 package wav
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -16,6 +17,7 @@ func NewRiffFile(name string, header *RiffHeader, headers []*Header) *RiffFile {
 	return &RiffFile{name: name, header: header, headers: headers}
 }
 
+//todo: remove file dependency and use reader as parameter
 func CreateRiffFile(file *os.File) (*RiffFile, error) {
 	fileInfo, err := file.Stat()
 
@@ -98,4 +100,36 @@ func readRiffHeader(file *os.File) (*RiffHeader, error) {
 	riffHeader, err := DecodeRiffHeader(headerBytes)
 
 	return riffHeader, err
+}
+
+func (rf *RiffFile) GetHeaderByID(headerID string) (*Header, error) {
+	for _, header := range rf.headers {
+		if header.ID() == headerID {
+			return header, nil
+		}
+	}
+
+	msg := fmt.Sprintf("header not found: %s", headerID)
+
+	return nil, errors.New(msg)
+}
+
+func (rf *RiffFile) DeleteChunk(headerID string) error {
+	//todo: implement
+	header, err := rf.GetHeaderByID(headerID)
+
+	if err != nil {
+		msg := fmt.Sprintf("chunk not found: %s", headerID)
+		return errors.New(msg)
+	}
+
+	fmt.Printf("Deleting chunk %s\n", header.ID())
+
+	return nil
+}
+
+func (rf *RiffFile) AddChunk(header *Header) error {
+	//todo: implement
+	fmt.Printf("Adding chunk %s", header.ID())
+	return nil
 }
