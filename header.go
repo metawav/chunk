@@ -2,7 +2,6 @@ package wav
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 )
 
@@ -11,28 +10,6 @@ type Header struct {
 	id       uint32
 	size     uint32
 	startPos uint32
-}
-
-// EncodeChunkHeader encodes
-func EncodeChunkHeader(id [4]byte, size uint32) *Header {
-	idVal := binary.BigEndian.Uint32(id[:])
-	header := &Header{id: idVal, size: size}
-
-	return header
-}
-
-// DecodeChunkHeader decodes chunk header from bytes
-func DecodeChunkHeader(bytes []byte, startPos uint32) (*Header, error) {
-	if !isValidChunkHeader(bytes) {
-		msg := fmt.Sprintf("invalid header")
-		return nil, errors.New(msg)
-	}
-
-	id := binary.BigEndian.Uint32(bytes[:IDSizeBytes])
-	size := binary.LittleEndian.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
-	header := &Header{id: id, size: size, startPos: startPos}
-
-	return header, nil
 }
 
 // ID is a 4-letter chunk identifier
@@ -49,27 +26,22 @@ func (h *Header) StartPos() uint32 {
 }
 
 // Size is the chunk size in bytes
-// not including: id (4 bytes) and size (4 bytes)
+// not including: id (4 bytes) and size (4 bytes).
 func (h *Header) Size() uint32 {
 	return h.size
 }
 
-// FullSize is the chunk size in bytes
+// FullSize is the chunk size in bytes.
 func (h *Header) FullSize() uint32 {
 	return h.size + HeaderSizeBytes
 }
 
-func isValidChunkHeader(bytes []byte) bool {
-	length := len(bytes)
-
-	if uint32(length) < HeaderSizeBytes {
-		return false
-	}
-
-	return true
+// String returns a stringrepresentation of header
+func (h *Header) String() string {
+	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d", h.ID(), h.Size(), h.FullSize(), h.StartPos())
 }
 
-// Bytes converts Header to  byte array
+// Bytes converts Header to  byte array.
 func (h *Header) Bytes() []byte {
 	bytes := make([]byte, HeaderSizeBytes)
 	binary.BigEndian.PutUint32(bytes[:IDSizeBytes], h.id)
@@ -78,7 +50,17 @@ func (h *Header) Bytes() []byte {
 	return bytes
 }
 
-// String returns a stringrepresentation of header
-func (h *Header) String() string {
-	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d", h.ID(), h.Size(), h.FullSize(), h.StartPos())
+// EncodeChunkHeader encodes provided id and size to Header.
+func EncodeChunkHeader(id [IDSizeBytes]byte, size uint32) *Header {
+	idVal := binary.BigEndian.Uint32(id[:])
+
+	return &Header{id: idVal, size: size}
+}
+
+// DecodeChunkHeader decodes chunk header from bytes.
+func DecodeChunkHeader(bytes [HeaderSizeBytes]byte, startPos uint32) *Header {
+	id := binary.BigEndian.Uint32(bytes[:IDSizeBytes])
+	size := binary.LittleEndian.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
+
+	return &Header{id: id, size: size, startPos: startPos}
 }

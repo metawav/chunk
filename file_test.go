@@ -2,6 +2,7 @@ package wav
 
 import (
 	"encoding/binary"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -33,7 +34,11 @@ func TestCreateRiffFile(t *testing.T) {
 }
 
 func TestGetHeaderByID(t *testing.T) {
-	riffFile := NewRiffFile("", nil, []*Header{})
+	riffFile := &RiffFile{}
+
+	for _, h := range riffFile.Headers {
+		fmt.Printf("%v\n", h)
+	}
 
 	header, err := riffFile.GetHeaderByID("")
 
@@ -48,7 +53,7 @@ func TestGetHeaderByID(t *testing.T) {
 	headerID := "test"
 	id := binary.BigEndian.Uint32([]byte(headerID)[:4])
 	header = &Header{id: id}
-	riffFile.headers = append(riffFile.headers, header)
+	riffFile.Headers = append(riffFile.Headers, header)
 	header, err = riffFile.GetHeaderByID(headerID)
 
 	if err != nil {

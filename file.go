@@ -7,17 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 )
 
 type RiffFile struct {
-	name    string
-	header  *RiffHeader
-	headers []*Header
-}
-
-// NewFile creates a new RIFF file.
-func NewRiffFile(name string, header *RiffHeader, headers []*Header) *RiffFile {
-	return &RiffFile{name: name, header: header, headers: headers}
+	Name    string
+	Header  *RiffHeader
+	Headers []*Header
 }
 
 //todo: remove file dependency and use reader as parameter
@@ -35,33 +31,17 @@ func CreateRiffFile(file *os.File) (*RiffFile, error) {
 	}
 
 	headers := readChunkHeaders(RiffHeaderSizeBytes, file, fileInfo.Size())
-	riffFile := NewRiffFile(file.Name(), riffHeader, headers)
+	riffFile := &RiffFile{Name: file.Name(), Header: riffHeader, Headers: headers}
 
 	return riffFile, nil
-}
-
-// Name returns the file name.
-func (rf *RiffFile) Name() string {
-	return rf.name
-}
-
-// RiffHeader returns the RIFF header.
-func (rf *RiffFile) RiffHeader() *RiffHeader {
-	return rf.header
-}
-
-//todo: rename to Headers
-// Headers returns all contained chunk headers.
-func (rf *RiffFile) Headers() []*Header {
-	return rf.headers
 }
 
 func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
 	var headers []*Header
 
 	for int64(offset) < fileSize {
-		chunkHeaderBytes := make([]byte, HeaderSizeBytes)
-		n, err := file.ReadAt(chunkHeaderBytes, int64(offset))
+		var chunkHeaderBytes [HeaderSizeBytes]byte
+		n, err := file.ReadAt(chunkHeaderBytes[:], int64(offset))
 
 		if err != nil {
 			test := make([]byte, n)
@@ -72,15 +52,9 @@ func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
 			continue
 		}
 
-		chunkHeader, err := DecodeChunkHeader(chunkHeaderBytes, offset)
-
-		if err == nil {
-			headers = append(headers, chunkHeader)
-			offset += chunkHeader.FullSize()
-			continue
-		}
-
-		offset += uint32(n)
+		chunkHeader := DecodeChunkHeader(chunkHeaderBytes, offset)
+		headers = append(headers, chunkHeader)
+		offset += chunkHeader.FullSize()
 
 		// For compatibility with EA IFF (Electronic Arts Interchange File Format)
 		// chunks must be even sized and always start at an even position.
@@ -93,20 +67,20 @@ func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
 }
 
 func readRiffHeader(file *os.File) (*RiffHeader, error) {
-	headerBytes := make([]byte, RiffHeaderSizeBytes)
-	_, err := file.ReadAt(headerBytes, 0)
+	var headerBytes [RiffHeaderSizeBytes]byte
+	_, err := file.ReadAt(headerBytes[:], 0)
 
 	if err != nil {
 		return nil, err
 	}
 
-	riffHeader, err := DecodeRiffHeader(headerBytes)
+	riffHeader := DecodeRiffHeader(headerBytes)
 
-	return riffHeader, err
+	return riffHeader, nil
 }
 
 func (rf *RiffFile) GetHeaderByID(headerID string) (*Header, error) {
-	for _, header := range rf.headers {
+	for _, header := range rf.Headers {
 		if header.ID() == headerID {
 			return header, nil
 		}
@@ -117,23 +91,60 @@ func (rf *RiffFile) GetHeaderByID(headerID string) (*Header, error) {
 	return nil, errors.New(msg)
 }
 
-func (rf *RiffFile) DeleteChunk(headerID string) error {
+func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
 	header, err := rf.GetHeaderByID(headerID)
 
 	if err != nil {
 		msg := fmt.Sprintf("chunk not found: %s", headerID)
-		return errors.New(msg)
+		return 0, errors.New(msg)
 	}
-
-	fmt.Printf("Deleting chunk %s\n", header.ID())
 
 	//todo: implement
 	// update riff header size
-	// update start pos of following headers
 	// use reader and writer interface to avoid dependency
+	headers := rf.Headers
+	sort.Sort(SortBy(headers))
 
-	return nil
+	offset := header.StartPos()
+
+	for i := 0; i < len(headers); i++ {
+		if headers[i].StartPos() > header.StartPos() {
+			headerBytes := make([]byte, headers[i].FullSize())
+			//todo: ensure reading complete data
+			n, err := reader.ReadAt(headerBytes, int64(headers[i].StartPos()))
+
+			if err != nil {
+				return 0, err
+			}
+
+			_, err = writer.WriteAt(headerBytes, int64(offset))
+
+			if err != nil {
+				return 0, err
+			}
+
+			offset += uint32(n)
+		}
+	}
+
+	riffSize := rf.Header.Size() - header.FullSize()
+	err = rf.UpdateSize(riffSize, writer)
+
+	if err != nil {
+		return 0, err
+	}
+
+	fileSize := rf.Header.FullSize() - header.FullSize()
+
+	return fileSize, nil
 }
+
+//todo: move to header file and make internal
+type SortBy []*Header
+
+func (a SortBy) Len() int           { return len(a) }
+func (a SortBy) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a SortBy) Less(i, j int) bool { return a[i].StartPos() < a[j].StartPos() }
 
 // AddChunk
 func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
@@ -142,7 +153,7 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 	}
 
 	// start writing chunk to end of file
-	offset := int64(rf.header.FullSize())
+	offset := int64(rf.Header.FullSize())
 	var chunkSize uint32 = 0
 
 	for {
@@ -171,7 +182,7 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 		}
 	}
 
-	riffSize := rf.header.size + chunkSize
+	riffSize := rf.Header.size + chunkSize
 	err := rf.UpdateSize(riffSize, writer)
 
 	if err != nil {

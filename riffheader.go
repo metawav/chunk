@@ -2,43 +2,16 @@ package wav
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 )
 
-// RiffHeader is a Header carrying additional format information
+// RiffHeader is a Header carrying additional format information.
 type RiffHeader struct {
 	*Header
 	format uint32
 }
 
-// NewRiffHeader creates a new RIFF header
-func NewRiffHeader(header *Header, format uint32) *RiffHeader {
-	riffHeader := &RiffHeader{Header: header, format: format}
-	riffHeader.format = format
-
-	return riffHeader
-}
-
-// DecodeRiffHeader decodes RIFF header from bytes
-func DecodeRiffHeader(bytes []byte) (*RiffHeader, error) {
-	if !isValidRiffHeader(bytes) {
-		msg := fmt.Sprintf("invalid riff header")
-		return nil, errors.New(msg)
-	}
-
-	chunk, err := DecodeChunkHeader(bytes, 0)
-
-	if err != nil {
-		return nil, err
-	}
-
-	format := binary.BigEndian.Uint32(bytes[HeaderSizeBytes : HeaderSizeBytes+FormatSizeBytes])
-
-	return NewRiffHeader(chunk, format), nil
-}
-
-// Format is a 4-letter format description
+// Format is a 4-letter format description.
 func (rh *RiffHeader) Format() string {
 	val := make([]byte, 32)
 	binary.BigEndian.PutUint32(val, rh.format)
@@ -46,28 +19,25 @@ func (rh *RiffHeader) Format() string {
 	return trim(val)
 }
 
-// Size is the chunk size in bytes
-// not including: id (4 bytes), size (4 bytes) and format (4 bytes)
-func (rh *RiffHeader) Size() uint32 {
-	return rh.size
-}
-
-// FullSize is the chunk size in bytes
-func (rh *RiffHeader) FullSize() uint32 {
-	return rh.Size() + HeaderSizeBytes
-}
-
-// String returns a stringrepresentation of header
+// String returns a string representation of header.
 func (rh *RiffHeader) String() string {
 	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d Format: %s", rh.ID(), rh.Size(), rh.FullSize(), rh.StartPos(), rh.Format())
 }
 
-func isValidRiffHeader(bytes []byte) bool {
-	length := len(bytes)
+// EncodeRiffHeader encodes provided id, size and format to RiffHeader.
+func EncodeRiffHeader(id [IDSizeBytes]byte, size uint32, format [FormatSizeBytes]byte) *RiffHeader {
+	chunkHeader := EncodeChunkHeader(id, size)
+	formatVal := binary.BigEndian.Uint32(format[:])
 
-	if uint32(length) < RiffHeaderSizeBytes {
-		return false
-	}
+	return &RiffHeader{Header: chunkHeader, format: formatVal}
+}
 
-	return true
+// DecodeRiffHeader decodes RIFF header from bytes.
+func DecodeRiffHeader(bytes [RiffHeaderSizeBytes]byte) *RiffHeader {
+	var headerBytes [HeaderSizeBytes]byte
+	copy(headerBytes[:], bytes[:HeaderSizeBytes])
+	chunk := DecodeChunkHeader(headerBytes, 0)
+	format := binary.BigEndian.Uint32(bytes[HeaderSizeBytes : HeaderSizeBytes+FormatSizeBytes])
+
+	return &RiffHeader{Header: chunk, format: format}
 }
