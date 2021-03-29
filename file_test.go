@@ -40,11 +40,7 @@ func TestGetHeaderByID(t *testing.T) {
 		fmt.Printf("%v\n", h)
 	}
 
-	header, err := riffFile.GetHeaderByID("")
-
-	if err == nil {
-		t.Errorf("error should be returned")
-	}
+	header := riffFile.GetHeaderByID("")
 
 	if header != nil {
 		t.Errorf("header should not be returned")
@@ -54,11 +50,7 @@ func TestGetHeaderByID(t *testing.T) {
 	id := binary.BigEndian.Uint32([]byte(headerID)[:4])
 	header = &Header{id: id}
 	riffFile.Headers = append(riffFile.Headers, header)
-	header, err = riffFile.GetHeaderByID(headerID)
-
-	if err != nil {
-		t.Errorf("error should not be returned, %s", err)
-	}
+	header = riffFile.GetHeaderByID(headerID)
 
 	if header == nil {
 		t.Errorf("header should be returned")

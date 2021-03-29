@@ -79,29 +79,25 @@ func readRiffHeader(file *os.File) (*RiffHeader, error) {
 	return riffHeader, nil
 }
 
-func (rf *RiffFile) GetHeaderByID(headerID string) (*Header, error) {
+// GetHeaderByID returns hedaer with provided ID or nil if not contained in RIFF.
+func (rf *RiffFile) GetHeaderByID(headerID string) *Header {
 	for _, header := range rf.Headers {
 		if header.ID() == headerID {
-			return header, nil
+			return header
 		}
 	}
 
-	msg := fmt.Sprintf("header not found: %s", headerID)
-
-	return nil, errors.New(msg)
+	return nil
 }
 
 func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
-	header, err := rf.GetHeaderByID(headerID)
+	header := rf.GetHeaderByID(headerID)
 
-	if err != nil {
+	if header == nil {
 		msg := fmt.Sprintf("chunk not found: %s", headerID)
 		return 0, errors.New(msg)
 	}
 
-	//todo: implement
-	// update riff header size
-	// use reader and writer interface to avoid dependency
 	headers := rf.Headers
 	sort.Sort(SortBy(headers))
 
@@ -128,7 +124,7 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 	}
 
 	riffSize := rf.Header.Size() - header.FullSize()
-	err = rf.UpdateSize(riffSize, writer)
+	err := rf.UpdateSize(riffSize, writer)
 
 	if err != nil {
 		return 0, err
