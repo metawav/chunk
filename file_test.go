@@ -3,33 +3,21 @@ package wav
 import (
 	"encoding/binary"
 	"fmt"
-	"os"
+	"strings"
 	"testing"
 )
 
 func TestCreateRiffFile(t *testing.T) {
-	var file *os.File
-	riffFile, err := CreateRiffFile(file)
-
-	if err == nil {
-		t.Errorf("error should be returned with file %v", file)
-	}
-
-	if riffFile != nil {
-		t.Errorf("riff file should not be returned with file %v", file)
-	}
-
-	fileName := "sine.1sec.wav"
-	file, _ = OpenFile(fileName)
-
-	riffFile, err = CreateRiffFile(file)
+	fileName := "testFile"
+	reader := strings.NewReader("This ab")
+	riff, err := CreateRiffFile(fileName, reader)
 
 	if err != nil {
-		t.Errorf("error should be returned with file %s", file.Name())
+		t.Errorf("error should bot be returned with file %s", fileName)
 	}
 
-	if riffFile == nil {
-		t.Errorf("riff file should be returned with file %s", file.Name())
+	if riff == nil {
+		t.Errorf("riff file should be returned with file %s", fileName)
 	}
 }
 

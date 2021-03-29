@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"sort"
 )
 
@@ -16,40 +15,28 @@ type RiffFile struct {
 	Headers []*Header
 }
 
-//todo: remove file dependency and use reader as parameter
-func CreateRiffFile(file *os.File) (*RiffFile, error) {
-	fileInfo, err := file.Stat()
+func CreateRiffFile(fileName string, reader io.ReadSeeker) (*RiffFile, error) {
+	riffHeader, err := readRiffHeader(reader)
 
 	if err != nil {
 		return nil, err
 	}
 
-	riffHeader, err := readRiffHeader(file)
-
-	if err != nil {
-		return nil, err
-	}
-
-	headers := readChunkHeaders(RiffHeaderSizeBytes, file, fileInfo.Size())
-	riffFile := &RiffFile{Name: file.Name(), Header: riffHeader, Headers: headers}
+	headers := readChunkHeaders(reader, RiffHeaderSizeBytes)
+	riffFile := &RiffFile{Name: fileName, Header: riffHeader, Headers: headers}
 
 	return riffFile, nil
 }
 
-func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
+func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 	var headers []*Header
 
-	for int64(offset) < fileSize {
+	for {
 		var chunkHeaderBytes [HeaderSizeBytes]byte
-		n, err := file.ReadAt(chunkHeaderBytes[:], int64(offset))
+		_, err := reader.Read(chunkHeaderBytes[:])
 
 		if err != nil {
-			test := make([]byte, n)
-			//todo: handle error
-			n, _ := file.ReadAt(test, int64(offset))
-			fmt.Printf("ERROR - fileName: %s fileSize: %d offset: %d read bytes: %d raw: %x error: %+v\n", file.Name(), fileSize, offset, n, test, err)
-			offset += uint32(n)
-			continue
+			break
 		}
 
 		chunkHeader := DecodeChunkHeader(chunkHeaderBytes, offset)
@@ -61,14 +48,16 @@ func readChunkHeaders(offset uint32, file *os.File, fileSize int64) []*Header {
 		if offset%2 != 0 {
 			offset++
 		}
+
+		reader.Seek(int64(chunkHeader.Size()), io.SeekCurrent)
 	}
 
 	return headers
 }
 
-func readRiffHeader(file *os.File) (*RiffHeader, error) {
+func readRiffHeader(reader io.ReadSeeker) (*RiffHeader, error) {
 	var headerBytes [RiffHeaderSizeBytes]byte
-	_, err := file.ReadAt(headerBytes[:], 0)
+	_, err := reader.Read(headerBytes[:])
 
 	if err != nil {
 		return nil, err
