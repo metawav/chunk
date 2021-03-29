@@ -79,7 +79,7 @@ func readRiffHeader(file *os.File) (*RiffHeader, error) {
 	return riffHeader, nil
 }
 
-// GetHeaderByID returns hedaer with provided ID or nil if not contained in RIFF.
+// GetHeaderByID returns header with provided ID or nil if not contained in RIFF.
 func (rf *RiffFile) GetHeaderByID(headerID string) *Header {
 	for _, header := range rf.Headers {
 		if header.ID() == headerID {
@@ -99,7 +99,7 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 	}
 
 	headers := rf.Headers
-	sort.Sort(SortBy(headers))
+	sort.Sort(SortHeadersByStartPosAsc(headers))
 
 	offset := header.StartPos()
 
@@ -134,13 +134,6 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 
 	return fileSize, nil
 }
-
-//todo: move to header file and make internal
-type SortBy []*Header
-
-func (a SortBy) Len() int           { return len(a) }
-func (a SortBy) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a SortBy) Less(i, j int) bool { return a[i].StartPos() < a[j].StartPos() }
 
 // AddChunk
 func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
@@ -188,6 +181,7 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 	return nil
 }
 
+// UpdateSize
 func (rf *RiffFile) UpdateSize(size uint32, writer io.WriterAt) error {
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.LittleEndian, size)
