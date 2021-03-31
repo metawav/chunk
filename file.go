@@ -33,7 +33,7 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 
 	for {
 		var chunkHeaderBytes [HeaderSizeBytes]byte
-		_, err := reader.Read(chunkHeaderBytes[:])
+		_, err := io.ReadFull(reader, chunkHeaderBytes[:])
 
 		if err != nil {
 			break
@@ -57,7 +57,7 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 
 func readRiffHeader(reader io.ReadSeeker) (*RiffHeader, error) {
 	var headerBytes [RiffHeaderSizeBytes]byte
-	_, err := reader.Read(headerBytes[:])
+	_, err := io.ReadFull(reader, headerBytes[:])
 
 	if err != nil {
 		return nil, err
@@ -89,14 +89,13 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 
 	headers := rf.Headers
 	sort.Sort(SortHeadersByStartPosAsc(headers))
-
 	offset := header.StartPos()
 
 	for i := 0; i < len(headers); i++ {
 		if headers[i].StartPos() > header.StartPos() {
 			headerBytes := make([]byte, headers[i].FullSize())
-			//todo: ensure reading complete data
-			n, err := reader.ReadAt(headerBytes, int64(headers[i].StartPos()))
+			sectionReader := io.NewSectionReader(reader, int64(headers[i].StartPos()), int64(len(headerBytes)))
+			n, err := io.ReadFull(sectionReader, headerBytes[:])
 
 			if err != nil {
 				return 0, err
