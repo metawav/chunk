@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// RiffFile
 type RiffFile struct {
 	Name    string
 	Header  *RiffHeader
