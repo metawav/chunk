@@ -9,14 +9,15 @@ import (
 	"sort"
 )
 
-// RiffFile
+// RiffFile describes a RIFF file by name, RIFF header and contained headers.
 type RiffFile struct {
 	Name    string
 	Header  *RiffHeader
 	Headers []*Header
 }
 
-func CreateRiffFile(fileName string, reader io.ReadSeeker) (*RiffFile, error) {
+// CreateRiffFile creates a RiffFile struct from provided byte stream and assigns provided name.
+func CreateRiffFile(name string, reader io.ReadSeeker) (*RiffFile, error) {
 	riffHeader, err := readRiffHeader(reader)
 
 	if err != nil {
@@ -24,7 +25,7 @@ func CreateRiffFile(fileName string, reader io.ReadSeeker) (*RiffFile, error) {
 	}
 
 	headers := readChunkHeaders(reader, RiffHeaderSizeBytes)
-	riffFile := &RiffFile{Name: fileName, Header: riffHeader, Headers: headers}
+	riffFile := &RiffFile{Name: name, Header: riffHeader, Headers: headers}
 
 	return riffFile, nil
 }
@@ -80,6 +81,7 @@ func (rf *RiffFile) GetHeaderByID(headerID string) *Header {
 	return nil
 }
 
+// DeleteChunk
 func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
 	header := rf.GetHeaderByID(headerID)
 
@@ -90,25 +92,18 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 
 	headers := rf.Headers
 	sort.Sort(SortHeadersByStartPosAsc(headers))
-	offset := header.StartPos()
+	writeOffset := header.StartPos()
 
 	for i := 0; i < len(headers); i++ {
 		if headers[i].StartPos() > header.StartPos() {
-			headerBytes := make([]byte, headers[i].FullSize())
-			sectionReader := io.NewSectionReader(reader, int64(headers[i].StartPos()), int64(len(headerBytes)))
-			n, err := io.ReadFull(sectionReader, headerBytes[:])
+			sectionReader := io.NewSectionReader(reader, int64(headers[i].StartPos()), int64(headers[i].FullSize()))
+			n, err := moveChunk(writeOffset, headers[i].FullSize(), sectionReader, writer)
 
 			if err != nil {
 				return 0, err
 			}
 
-			_, err = writer.WriteAt(headerBytes, int64(offset))
-
-			if err != nil {
-				return 0, err
-			}
-
-			offset += uint32(n)
+			writeOffset += uint32(n)
 		}
 	}
 
@@ -124,7 +119,24 @@ func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.W
 	return fileSize, nil
 }
 
-// AddChunk
+func moveChunk(writeOffset uint32, size uint32, reader io.Reader, writer io.WriterAt) (int, error) {
+	bytes := make([]byte, size)
+	n, err := io.ReadFull(reader, bytes[:])
+
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = writer.WriteAt(bytes, int64(writeOffset))
+
+	if err != nil {
+		return 0, err
+	}
+
+	return n, nil
+}
+
+// AddChunk reads chnunk bytes from io.Reader and writes to io.Writer
 func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
 	if bufferSize <= 0 {
 		bufferSize = 1024
@@ -136,11 +148,10 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 
 	for {
 		b := make([]byte, bufferSize)
-		// todo: how to be sure it's a valid header?
-		n, err := reader.Read(b)
+		n, err := io.ReadFull(reader, b)
 
 		if n > 0 {
-			b = b[:n]
+			//todo: ensure writng all bytes from b
 			_, err := writer.WriteAt(b, offset)
 
 			if err != nil {
