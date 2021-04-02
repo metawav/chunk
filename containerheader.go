@@ -3,8 +3,6 @@ package chunk
 import (
 	"encoding/binary"
 	"fmt"
-
-	"github.com/pmoule/wav/strconv"
 )
 
 // RiffHeader is a Header carrying additional format information.
@@ -18,7 +16,7 @@ func (rh *ContainerHeader) Format() string {
 	val := make([]byte, 32)
 	binary.BigEndian.PutUint32(val, rh.format)
 
-	return strconv.Trim(val)
+	return trim(val)
 }
 
 // String returns a string representation of header.

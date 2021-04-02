@@ -3,8 +3,6 @@ package chunk
 import (
 	"encoding/binary"
 	"fmt"
-
-	"github.com/pmoule/wav/strconv"
 )
 
 // Header carries the following information of a chunk: ID, size and start position in a RIFF file
@@ -27,7 +25,7 @@ func (h *Header) ID() string {
 	val := make([]byte, 4)
 	binary.BigEndian.PutUint32(val, h.id)
 
-	return strconv.Trim(val)
+	return trim(val)
 }
 
 // StartPos is the starting position of this chunk in the byte sequence

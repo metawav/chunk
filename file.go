@@ -1,4 +1,4 @@
-package modifier
+package chunk
 
 // // todo: chunk ids might not be unique. Better delete by offset => GetHeaderByStartPos
 // // DeleteChunk
