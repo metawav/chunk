@@ -7,9 +7,10 @@ import (
 
 // Header carries the following information of a chunk: ID, size and start position in a RIFF file
 type Header struct {
-	id       uint32
-	size     uint32
-	startPos uint32
+	id        uint32
+	size      uint32
+	startPos  uint32
+	byteOrder binary.ByteOrder
 }
 
 // SortHeadersByStartPosAsc sorts headers by start position in ascending order.
@@ -52,22 +53,22 @@ func (h *Header) String() string {
 func (h *Header) Bytes() []byte {
 	bytes := make([]byte, HeaderSizeBytes)
 	binary.BigEndian.PutUint32(bytes[:IDSizeBytes], h.id)
-	binary.LittleEndian.PutUint32(bytes[IDSizeBytes:IDSizeBytes+SizeSizeBytes], h.size)
+	h.byteOrder.PutUint32(bytes[IDSizeBytes:IDSizeBytes+SizeSizeBytes], h.size)
 
 	return bytes
 }
 
 // EncodeChunkHeader encodes provided id and size to Header.
-func EncodeChunkHeader(id [IDSizeBytes]byte, size uint32) *Header {
+func EncodeChunkHeader(id [IDSizeBytes]byte, size uint32, byteOrder binary.ByteOrder) *Header {
 	idVal := binary.BigEndian.Uint32(id[:])
 
-	return &Header{id: idVal, size: size}
+	return &Header{id: idVal, size: size, byteOrder: byteOrder}
 }
 
 // DecodeChunkHeader decodes chunk header from bytes.
-func DecodeChunkHeader(bytes [HeaderSizeBytes]byte, startPos uint32) *Header {
+func DecodeChunkHeader(bytes [HeaderSizeBytes]byte, startPos uint32, byteOrder binary.ByteOrder) *Header {
 	id := binary.BigEndian.Uint32(bytes[:IDSizeBytes])
-	size := binary.LittleEndian.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
+	size := byteOrder.Uint32(bytes[IDSizeBytes : IDSizeBytes+SizeSizeBytes])
 
-	return &Header{id: id, size: size, startPos: startPos}
+	return &Header{id: id, size: size, startPos: startPos, byteOrder: byteOrder}
 }

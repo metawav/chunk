@@ -9,6 +9,6 @@ const (
 	HeaderSizeBytes uint32 = IDSizeBytes + SizeSizeBytes
 	// FormatSizeBytes is byte size of the format value
 	FormatSizeBytes uint32 = 4
-	// RiffHeaderSizeBytes is byte size of the RIFF header
-	RiffHeaderSizeBytes uint32 = HeaderSizeBytes + FormatSizeBytes
+	// ContainerHeaderSizeBytes is byte size of the container header
+	ContainerHeaderSizeBytes uint32 = HeaderSizeBytes + FormatSizeBytes
 )

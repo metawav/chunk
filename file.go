@@ -9,28 +9,38 @@ import (
 	"sort"
 )
 
-// RiffFile describes a RIFF file by name, RIFF header and contained headers.
-type RiffFile struct {
-	Name    string
-	Header  *RiffHeader
-	Headers []*Header
+// File describes a chunked file by name, container header, contained headers and byte order.
+type File struct {
+	Name      string
+	Header    *ContainerHeader
+	Headers   []*Header
+	ByteOrder binary.ByteOrder
 }
 
 // CreateRiffFile creates a RiffFile struct from provided byte stream and assigns provided name.
-func CreateRiffFile(name string, reader io.ReadSeeker) (*RiffFile, error) {
-	riffHeader, err := readRiffHeader(reader)
+func CreateRiffFile(name string, reader io.ReadSeeker) (*File, error) {
+	return createFile(name, reader, binary.LittleEndian)
+}
+
+// CreateAiffFile creates a AiffFile struct from provided byte stream and assigns provided name.
+func CreateAiffFile(name string, reader io.ReadSeeker) (*File, error) {
+	return createFile(name, reader, binary.BigEndian)
+}
+
+func createFile(name string, reader io.ReadSeeker, byteOrder binary.ByteOrder) (*File, error) {
+	containerHeader, err := readContainerHeader(reader, byteOrder)
 
 	if err != nil {
 		return nil, err
 	}
 
-	headers := readChunkHeaders(reader, RiffHeaderSizeBytes)
-	riffFile := &RiffFile{Name: name, Header: riffHeader, Headers: headers}
+	headers := readChunkHeaders(reader, ContainerHeaderSizeBytes, byteOrder)
+	riffFile := &File{Name: name, Header: containerHeader, Headers: headers, ByteOrder: byteOrder}
 
 	return riffFile, nil
 }
 
-func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
+func readChunkHeaders(reader io.ReadSeeker, offset uint32, byteOrder binary.ByteOrder) []*Header {
 	var headers []*Header
 
 	for {
@@ -41,7 +51,7 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 			break
 		}
 
-		chunkHeader := DecodeChunkHeader(chunkHeaderBytes, offset)
+		chunkHeader := DecodeChunkHeader(chunkHeaderBytes, offset, byteOrder)
 		headers = append(headers, chunkHeader)
 		offset += chunkHeader.FullSize()
 
@@ -49,6 +59,7 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 		// chunks must be even sized and always start at an even position.
 		if offset%2 != 0 {
 			offset++
+			reader.Seek(1, io.SeekCurrent)
 		}
 
 		reader.Seek(int64(chunkHeader.Size()), io.SeekCurrent)
@@ -57,21 +68,21 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32) []*Header {
 	return headers
 }
 
-func readRiffHeader(reader io.ReadSeeker) (*RiffHeader, error) {
-	var headerBytes [RiffHeaderSizeBytes]byte
+func readContainerHeader(reader io.ReadSeeker, byteOrder binary.ByteOrder) (*ContainerHeader, error) {
+	var headerBytes [ContainerHeaderSizeBytes]byte
 	_, err := io.ReadFull(reader, headerBytes[:])
 
 	if err != nil {
 		return nil, err
 	}
 
-	riffHeader := DecodeRiffHeader(headerBytes)
+	riffHeader := DecodeContainerHeader(headerBytes, byteOrder)
 
 	return riffHeader, nil
 }
 
 // FindHeader returns headers with provided ID.
-func (rf *RiffFile) FindHeaders(id string) []*Header {
+func (rf *File) FindHeaders(id string) []*Header {
 	var headers []*Header
 
 	for _, header := range rf.Headers {
@@ -85,7 +96,7 @@ func (rf *RiffFile) FindHeaders(id string) []*Header {
 
 // todo: chunk ids might not be unique. Better delete by offset => GetHeaderByStartPos
 // DeleteChunk
-func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
+func (rf *File) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
 	foundHeaders := rf.FindHeaders(headerID)
 
 	if foundHeaders == nil {
@@ -142,7 +153,7 @@ func moveChunk(writeOffset uint32, size uint32, reader io.Reader, writer io.Writ
 }
 
 // AddChunk reads chnunk bytes from io.Reader and writes to io.Writer
-func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
+func (rf *File) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize int) error {
 	if bufferSize <= 0 {
 		bufferSize = 1024
 	}
@@ -187,7 +198,7 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 }
 
 // UpdateSize
-func (rf *RiffFile) UpdateSize(size uint32, writer io.WriterAt) error {
+func (rf *File) UpdateSize(size uint32, writer io.WriterAt) error {
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.LittleEndian, size)
 
