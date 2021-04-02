@@ -65,14 +65,15 @@ func readChunkHeaders(reader io.ReadSeeker, offset uint32, byteOrder binary.Byte
 		headers = append(headers, chunkHeader)
 		offset += chunkHeader.FullSize()
 
+		seek := int64(chunkHeader.Size())
+
 		// For compatibility with EA IFF (Electronic Arts Interchange File Format)
 		// chunks must be even sized and always start at an even position.
-		if offset%2 != 0 {
-			offset++
-			reader.Seek(1, io.SeekCurrent)
+		if chunkHeader.HasPadding() {
+			seek++
 		}
 
-		reader.Seek(int64(chunkHeader.Size()), io.SeekCurrent)
+		reader.Seek(seek, io.SeekCurrent)
 	}
 
 	return headers

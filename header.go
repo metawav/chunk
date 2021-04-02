@@ -7,10 +7,11 @@ import (
 
 // Header carries the following information of a chunk: ID, size and start position in a RIFF file
 type Header struct {
-	id        uint32
-	size      uint32
-	startPos  uint32
-	byteOrder binary.ByteOrder
+	id         uint32
+	size       uint32
+	startPos   uint32
+	hasPadding bool
+	byteOrder  binary.ByteOrder
 }
 
 // SortHeadersByStartPosAsc sorts headers by start position in ascending order.
@@ -41,12 +42,24 @@ func (h *Header) Size() uint32 {
 
 // FullSize is the chunk size in bytes.
 func (h *Header) FullSize() uint32 {
-	return h.size + HeaderSizeBytes
+	size := h.size + HeaderSizeBytes
+
+	if size%2 != 0 {
+		size++
+	}
+
+	return size
+}
+
+func (h *Header) HasPadding() bool {
+	isOdd := h.Size()%2 != 0
+
+	return isOdd
 }
 
 // String returns a stringrepresentation of header
 func (h *Header) String() string {
-	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d", h.ID(), h.Size(), h.FullSize(), h.StartPos())
+	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d HasPadding: %t", h.ID(), h.Size(), h.FullSize(), h.StartPos(), h.HasPadding())
 }
 
 // Bytes converts Header to  byte array.
