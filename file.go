@@ -17,17 +17,17 @@ type File struct {
 	ByteOrder binary.ByteOrder
 }
 
-// CreateRiffFile creates a RiffFile struct from provided byte stream and assigns provided name.
-func CreateRiffFile(name string, reader io.ReadSeeker) (*File, error) {
-	return createFile(name, reader, binary.LittleEndian)
+// ReadRiffFile read a RIFF file from provided byte stream and assigns provided name.
+func ReadRiffFile(name string, reader io.ReadSeeker) (*File, error) {
+	return readFile(name, reader, binary.LittleEndian)
 }
 
-// CreateAiffFile creates a AiffFile struct from provided byte stream and assigns provided name.
-func CreateAiffFile(name string, reader io.ReadSeeker) (*File, error) {
-	return createFile(name, reader, binary.BigEndian)
+// ReadAiffFile read a AIFF / AIFF-C file from provided byte stream and assigns provided name.
+func ReadAiffFile(name string, reader io.ReadSeeker) (*File, error) {
+	return readFile(name, reader, binary.BigEndian)
 }
 
-func createFile(name string, reader io.ReadSeeker, byteOrder binary.ByteOrder) (*File, error) {
+func readFile(name string, reader io.ReadSeeker, byteOrder binary.ByteOrder) (*File, error) {
 	containerHeader, err := readContainerHeader(reader, byteOrder)
 
 	if err != nil {
