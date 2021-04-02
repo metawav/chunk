@@ -64,26 +64,49 @@ func TestCreateRiffFile(t *testing.T) {
 	}
 }
 
-func TestGetHeaderByID(t *testing.T) {
+func TestFindHeaders(t *testing.T) {
 	riffFile := &RiffFile{}
 
 	for _, h := range riffFile.Headers {
 		fmt.Printf("%v\n", h)
 	}
 
-	header := riffFile.GetHeaderByID("")
+	headers := riffFile.FindHeaders("")
 
-	if header != nil {
-		t.Errorf("header should not be returned")
+	if headers != nil {
+		t.Errorf("headers should not be returned")
 	}
 
 	headerID := "test"
 	id := binary.BigEndian.Uint32([]byte(headerID)[:4])
-	header = &Header{id: id}
+	header := &Header{id: id}
 	riffFile.Headers = append(riffFile.Headers, header)
-	header = riffFile.GetHeaderByID(headerID)
+	headers = riffFile.FindHeaders(headerID)
 
-	if header == nil {
-		t.Errorf("header should be returned")
+	if headers == nil {
+		t.Errorf("headers should be returned")
 	}
+
+	if len(headers) != 1 {
+		t.Errorf("headers size is %d, want %d", len(headers), 1)
+	}
+
+	riffFile.Headers = append(riffFile.Headers, header)
+	headers = riffFile.FindHeaders(headerID)
+
+	if len(headers) != 2 {
+		t.Errorf("headers size is %d, want %d", len(headers), 2)
+	}
+}
+
+func TestDeleteChunk(t *testing.T) {
+
+}
+
+func TestAddChunk(t *testing.T) {
+
+}
+
+func TestUpdateSize(t *testing.T) {
+
 }

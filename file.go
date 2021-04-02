@@ -70,26 +70,31 @@ func readRiffHeader(reader io.ReadSeeker) (*RiffHeader, error) {
 	return riffHeader, nil
 }
 
-// GetHeaderByID returns header with provided ID or nil if not contained in RIFF.
-func (rf *RiffFile) GetHeaderByID(headerID string) *Header {
+// FindHeader returns headers with provided ID.
+func (rf *RiffFile) FindHeaders(id string) []*Header {
+	var headers []*Header
+
 	for _, header := range rf.Headers {
-		if header.ID() == headerID {
-			return header
+		if header.ID() == id {
+			headers = append(headers, header)
 		}
 	}
 
-	return nil
+	return headers
 }
 
+// todo: chunk ids might not be unique. Better delete by offset => GetHeaderByStartPos
 // DeleteChunk
 func (rf *RiffFile) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {
-	header := rf.GetHeaderByID(headerID)
+	foundHeaders := rf.FindHeaders(headerID)
 
-	if header == nil {
+	if foundHeaders == nil {
 		msg := fmt.Sprintf("chunk not found: %s", headerID)
 		return 0, errors.New(msg)
 	}
 
+	//todo: find by offset
+	header := foundHeaders[0]
 	headers := rf.Headers
 	sort.Sort(SortHeadersByStartPosAsc(headers))
 	writeOffset := header.StartPos()
@@ -148,10 +153,10 @@ func (rf *RiffFile) AddChunk(reader io.Reader, writer io.WriterAt, bufferSize in
 
 	for {
 		b := make([]byte, bufferSize)
-		n, err := io.ReadFull(reader, b)
+		n, err := reader.Read(b)
 
 		if n > 0 {
-			//todo: ensure writng all bytes from b
+			b = b[:n]
 			_, err := writer.WriteAt(b, offset)
 
 			if err != nil {
@@ -192,7 +197,13 @@ func (rf *RiffFile) UpdateSize(size uint32, writer io.WriterAt) error {
 	}
 
 	b := buf.Bytes()
-	writer.WriteAt(b, 4)
+	_, err = writer.WriteAt(b, 4)
+
+	if err != nil {
+		return err
+	}
+
+	rf.Header.size = size
 
 	return nil
 }
