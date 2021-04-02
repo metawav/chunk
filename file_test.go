@@ -11,7 +11,7 @@ func TestCreateRiffFile(t *testing.T) {
 	fileName := "testFile"
 	content := make([]byte, ContainerHeaderSizeBytes-1)
 	reader := strings.NewReader(string(content))
-	riff, err := CreateRiffFile(fileName, reader)
+	riff, err := ReadRiffFile(fileName, reader)
 
 	if err == nil {
 		t.Errorf("error should be returned with file %s", fileName)
@@ -23,7 +23,7 @@ func TestCreateRiffFile(t *testing.T) {
 
 	content = make([]byte, ContainerHeaderSizeBytes)
 	reader = strings.NewReader(string(content))
-	riff, err = CreateRiffFile(fileName, reader)
+	riff, err = ReadRiffFile(fileName, reader)
 
 	if err != nil {
 		t.Errorf("error should not be returned with file %s", fileName)
@@ -43,7 +43,7 @@ func TestCreateRiffFile(t *testing.T) {
 
 	content = make([]byte, ContainerHeaderSizeBytes+HeaderSizeBytes)
 	reader = strings.NewReader(string(content))
-	riff, err = CreateRiffFile(fileName, reader)
+	riff, err = ReadRiffFile(fileName, reader)
 
 	if len(riff.Headers) != 1 {
 		t.Errorf("headers have a length of %d, wanted 1", len(riff.Headers))
@@ -57,7 +57,7 @@ func TestCreateRiffFile(t *testing.T) {
 	content = append(content, headerBytes...)
 	content = append(content, headerBytes...)
 	reader = strings.NewReader(string(content))
-	riff, err = CreateRiffFile(fileName, reader)
+	riff, err = ReadRiffFile(fileName, reader)
 
 	if len(riff.Headers) != 2 {
 		t.Errorf("headers have a length of %d, wanted 2", len(riff.Headers))
