@@ -1,4 +1,4 @@
-package wav
+package chunk
 
 const (
 	// IDSizeBytes is byte size of the id value

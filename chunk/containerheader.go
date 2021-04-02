@@ -1,8 +1,10 @@
-package wav
+package chunk
 
 import (
 	"encoding/binary"
 	"fmt"
+
+	"github.com/pmoule/wav/strconv"
 )
 
 // RiffHeader is a Header carrying additional format information.
@@ -16,7 +18,7 @@ func (rh *ContainerHeader) Format() string {
 	val := make([]byte, 32)
 	binary.BigEndian.PutUint32(val, rh.format)
 
-	return trim(val)
+	return strconv.Trim(val)
 }
 
 // String returns a string representation of header.
@@ -25,9 +27,9 @@ func (rh *ContainerHeader) String() string {
 }
 
 // EncodeContainerHeader encodes provided id, size and format to ContainerHeader.
-func EncodeContainerHeader(id [IDSizeBytes]byte, size uint32, format [FormatSizeBytes]byte, byteOrder binary.ByteOrder) *ContainerHeader {
+func EncodeContainerHeader(id FourCC, size uint32, format *FourCC, byteOrder binary.ByteOrder) *ContainerHeader {
 	chunkHeader := EncodeChunkHeader(id, size, byteOrder)
-	formatVal := binary.BigEndian.Uint32(format[:])
+	formatVal := format.ToUint32()
 
 	return &ContainerHeader{Header: chunkHeader, format: formatVal}
 }

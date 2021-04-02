@@ -1,8 +1,10 @@
-package wav
+package chunk
 
 import (
 	"encoding/binary"
 	"fmt"
+
+	"github.com/pmoule/wav/strconv"
 )
 
 // Header carries the following information of a chunk: ID, size and start position in a RIFF file
@@ -25,7 +27,7 @@ func (h *Header) ID() string {
 	val := make([]byte, 4)
 	binary.BigEndian.PutUint32(val, h.id)
 
-	return trim(val)
+	return strconv.Trim(val)
 }
 
 // StartPos is the starting position of this chunk in the byte sequence
@@ -59,8 +61,8 @@ func (h *Header) Bytes() []byte {
 }
 
 // EncodeChunkHeader encodes provided id and size to Header.
-func EncodeChunkHeader(id [IDSizeBytes]byte, size uint32, byteOrder binary.ByteOrder) *Header {
-	idVal := binary.BigEndian.Uint32(id[:])
+func EncodeChunkHeader(id FourCC, size uint32, byteOrder binary.ByteOrder) *Header {
+	idVal := id.ToUint32()
 
 	return &Header{id: idVal, size: size, byteOrder: byteOrder}
 }

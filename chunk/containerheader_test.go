@@ -1,4 +1,4 @@
-package wav
+package chunk
 
 import (
 	"encoding/binary"

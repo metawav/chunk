@@ -1,4 +1,4 @@
-package wav
+package strconv
 
 import "bytes"
 
@@ -7,7 +7,7 @@ func trimNullChars(data []byte) []byte {
 }
 
 // Trim converts byte array to string with null characters removed.
-func trim(data []byte) string {
+func Trim(data []byte) string {
 	trimmed := trimNullChars(data)
 
 	return string(trimmed)
