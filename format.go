@@ -3,12 +3,12 @@ package chunk
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
-	"strconv"
 )
 
-// Format
-type Format struct {
+// FMT
+type FMT struct {
 	*Header
 	format        uint16
 	channels      uint16
@@ -17,42 +17,56 @@ type Format struct {
 	blockAlign    uint16
 }
 
-func (fc *Format) Format() string {
-	return strconv.Itoa(int(fc.format))
+func (fc *FMT) Format() int {
+	return int(fc.format)
 }
 
-func (fc *Format) Channels() int {
+func (fc *FMT) Channels() int {
 	return int(fc.channels)
 }
 
-func (fc *Format) SamplesPerSec() int {
+func (fc *FMT) SamplesPerSec() int {
 	return int(fc.samplesPerSec)
 }
 
-func (fc *Format) BytesPerSec() int {
+func (fc *FMT) BytesPerSec() int {
 	return int(fc.bytesPerSec)
 }
 
-func (fc *Format) BlockAlign() int {
+func (fc *FMT) BlockAlign() int {
 	return int(fc.blockAlign)
 }
 
-func (fc *Format) String() string {
-	return fmt.Sprintf("Format: %s\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
+func (fc *FMT) String() string {
+	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
 
-// Bytes converts Format to  byte array.
-func (fc *Format) Bytes() []byte {
+// Bytes converts FMT to  byte array.
+func (fc *FMT) Bytes() []byte {
 	bytes := fc.Header.Bytes()
 
-	//todo: implement
+	data := make([]byte, 14)
+	byteOrder := binary.LittleEndian
+
+	byteOrder.PutUint16(data[0:2], fc.format)
+	byteOrder.PutUint16(data[2:4], fc.channels)
+	byteOrder.PutUint32(data[4:8], fc.samplesPerSec)
+	byteOrder.PutUint32(data[8:12], fc.bytesPerSec)
+	byteOrder.PutUint16(data[12:14], fc.blockAlign)
+
+	bytes = append(bytes, data...)
 
 	return bytes
 }
 
-// DecodeFormatChunk
-func DecodeFormatChunk(data []byte) (*Format, error) {
-	fc := &Format{}
+// DecodeFMTChunk
+func DecodeFMTChunk(data []byte) (*FMT, error) {
+	if len(data) < int(HeaderSizeBytes) {
+		msg := fmt.Sprintf("data slice requires a minimim lenght of %d", HeaderSizeBytes)
+		return nil, errors.New(msg)
+	}
+
+	fc := &FMT{}
 	byteOrder := binary.LittleEndian
 	fc.Header = decodeChunkHeader(data[:HeaderSizeBytes], 0, byteOrder)
 	buf := bytes.NewReader(data[HeaderSizeBytes:])
@@ -74,7 +88,7 @@ func DecodeFormatChunk(data []byte) (*Format, error) {
 
 // PCMFormat
 type PCMFormat struct {
-	*Format
+	*FMT
 	bitsPerSample uint16
 }
 
@@ -84,28 +98,38 @@ func (pfc *PCMFormat) BitsPerSample() int {
 }
 
 func (pfc *PCMFormat) String() string {
-	return fmt.Sprintf("%s\nBits per sample: %d", pfc.Format, pfc.BitsPerSample())
+	return fmt.Sprintf("%s\nBits per sample: %d", pfc.FMT, pfc.BitsPerSample())
 }
 
 func (pfc *PCMFormat) Bytes() []byte {
-	bytes := pfc.Format.Bytes()
+	bytes := pfc.FMT.Bytes()
 
-	//todo: implement
+	data := make([]byte, 2)
+	byteOrder := binary.LittleEndian
+
+	byteOrder.PutUint16(data[0:2], pfc.bitsPerSample)
+
+	bytes = append(bytes, data...)
 
 	return bytes
 }
 
 // DecodePCMFormatChunk
 func DecodePCMFormatChunk(data []byte) (*PCMFormat, error) {
-	fc, err := DecodeFormatChunk(data)
+	fc, err := DecodeFMTChunk(data)
 
 	if err != nil {
 		return nil, err
 	}
 
-	pfc := &PCMFormat{Format: fc}
-	//todo: replace 22 by len(fc.Bytes()
-	buf := bytes.NewReader(data[22:])
+	pfc := &PCMFormat{FMT: fc}
+
+	if len(data) < len(fc.Bytes()) {
+		msg := fmt.Sprintf("data slice requires a minimim lenght of %d", len(fc.Bytes()))
+		return nil, errors.New(msg)
+	}
+
+	buf := bytes.NewReader(data[len(fc.Bytes()):])
 	err = binary.Read(buf, binary.LittleEndian, &pfc.bitsPerSample)
 
 	if err != nil {

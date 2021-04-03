@@ -27,18 +27,16 @@ func TestDecodeChunkHeader(t *testing.T) {
 }
 
 func TestEncodeChunkHeader(t *testing.T) {
-	idVal := "Test"
-	var id [IDSizeBytes]byte
-	copy(id[:], idVal)
+	id := "Test"
 	var size uint32 = 12
-	header := EncodeChunkHeader(id, size, binary.LittleEndian)
+	header := createHeader(id, size)
 
 	if header == nil {
 		t.Errorf("header should not be nil")
 	}
 
-	if header.ID() != idVal {
-		t.Errorf("header ID is %s, want %s", header.ID(), idVal)
+	if header.ID() != id {
+		t.Errorf("header ID is %s, want %s", header.ID(), id)
 	}
 
 	if header.Size() != size {
@@ -54,12 +52,8 @@ func TestEncodeChunkHeader(t *testing.T) {
 	}
 }
 
-func TestBytes(t *testing.T) {
-	idVal := "Test"
-	var id [IDSizeBytes]byte
-	copy(id[:], idVal)
-	var size uint32 = 12
-	header := EncodeChunkHeader(id, size, binary.LittleEndian)
+func TestHeaderBytes(t *testing.T) {
+	header := createHeader("Test", 12)
 	headerBytes := header.Bytes()
 
 	if len(headerBytes) != int(HeaderSizeBytes) {
@@ -70,11 +64,18 @@ func TestBytes(t *testing.T) {
 	copy(bytes[:], headerBytes)
 	decodedHeader := DecodeChunkHeader(bytes, 0, binary.LittleEndian)
 
-	if decodedHeader.ID() != idVal {
-		t.Errorf("header ID is %s, want %s", header.ID(), idVal)
+	if decodedHeader.ID() != header.ID() {
+		t.Errorf("header ID is %s, want %s", header.ID(), header.ID())
 	}
 
-	if decodedHeader.Size() != size {
-		t.Errorf("header Size is %d, want %d", header.Size(), size)
+	if decodedHeader.Size() != header.Size() {
+		t.Errorf("header Size is %d, want %d", decodedHeader.Size(), header.Size())
 	}
+}
+
+func createHeader(idVal string, size uint32) *Header {
+	var id FourCC
+	copy(id[:], idVal)
+
+	return EncodeChunkHeader(id, size, binary.LittleEndian)
 }
