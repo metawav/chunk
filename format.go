@@ -9,6 +9,7 @@ import (
 
 // Format
 type Format struct {
+	*Header
 	format        uint16
 	channels      uint16
 	samplesPerSec uint32
@@ -40,18 +41,32 @@ func (fc *Format) String() string {
 	return fmt.Sprintf("Format: %s\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
 
-func readFormatChunk(data []byte) (*Format, error) {
-	fc := &Format{}
-	buf := bytes.NewReader(data[HeaderSizeBytes:])
-	byteOrder := binary.LittleEndian
-	err := binary.Read(buf, byteOrder, &fc.format)
-	err = binary.Read(buf, byteOrder, &fc.channels)
-	err = binary.Read(buf, byteOrder, &fc.samplesPerSec)
-	err = binary.Read(buf, byteOrder, &fc.bytesPerSec)
-	err = binary.Read(buf, byteOrder, &fc.blockAlign)
+// Bytes converts Format to  byte array.
+func (fc *Format) Bytes() []byte {
+	bytes := fc.Header.Bytes()
 
-	if err != nil {
-		return nil, err
+	//todo: implement
+
+	return bytes
+}
+
+// DecodeFormatChunk
+func DecodeFormatChunk(data []byte) (*Format, error) {
+	fc := &Format{}
+	byteOrder := binary.LittleEndian
+	fc.Header = decodeChunkHeader(data[:HeaderSizeBytes], 0, byteOrder)
+	buf := bytes.NewReader(data[HeaderSizeBytes:])
+
+	fields := []interface{}{&fc.format, &fc.channels, &fc.samplesPerSec, &fc.bytesPerSec, &fc.blockAlign}
+
+	for _, f := range fields {
+		err := binary.Read(buf, byteOrder, f)
+
+		if err != nil {
+			err = handleError(err)
+
+			return fc, err
+		}
 	}
 
 	return fc, nil
@@ -72,15 +87,24 @@ func (pfc *PCMFormat) String() string {
 	return fmt.Sprintf("%s\nBits per sample: %d", pfc.Format, pfc.BitsPerSample())
 }
 
-// ReadPCMFormatChunk
-func ReadPCMFormatChunk(data []byte) (*PCMFormat, error) {
-	fc, err := readFormatChunk(data)
+func (pfc *PCMFormat) Bytes() []byte {
+	bytes := pfc.Format.Bytes()
+
+	//todo: implement
+
+	return bytes
+}
+
+// DecodePCMFormatChunk
+func DecodePCMFormatChunk(data []byte) (*PCMFormat, error) {
+	fc, err := DecodeFormatChunk(data)
 
 	if err != nil {
 		return nil, err
 	}
 
 	pfc := &PCMFormat{Format: fc}
+	//todo: replace 22 by len(fc.Bytes()
 	buf := bytes.NewReader(data[22:])
 	err = binary.Read(buf, binary.LittleEndian, &pfc.bitsPerSample)
 

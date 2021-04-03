@@ -85,3 +85,11 @@ func DecodeChunkHeader(bytes [HeaderSizeBytes]byte, startPos uint32, byteOrder b
 
 	return &Header{id: id, size: size, startPos: startPos, byteOrder: byteOrder}
 }
+
+func decodeChunkHeader(bytes []byte, startPos uint32, byteOrder binary.ByteOrder) *Header {
+	var headerBytes [HeaderSizeBytes]byte
+	copy(headerBytes[:], bytes[:HeaderSizeBytes])
+	chunkHeader := DecodeChunkHeader(headerBytes, startPos, byteOrder)
+
+	return chunkHeader
+}

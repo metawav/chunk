@@ -34,10 +34,8 @@ func EncodeContainerHeader(id FourCC, size uint32, format *FourCC, byteOrder bin
 
 // DecodeContainerHeader decodes container header from bytes.
 func DecodeContainerHeader(bytes [ContainerHeaderSizeBytes]byte, byteOrder binary.ByteOrder) *ContainerHeader {
-	var headerBytes [HeaderSizeBytes]byte
-	copy(headerBytes[:], bytes[:HeaderSizeBytes])
-	chunk := DecodeChunkHeader(headerBytes, 0, byteOrder)
+	chunkHeader := decodeChunkHeader(bytes[:HeaderSizeBytes], 0, byteOrder)
 	format := binary.BigEndian.Uint32(bytes[HeaderSizeBytes : HeaderSizeBytes+FormatSizeBytes])
 
-	return &ContainerHeader{Header: chunk, format: format}
+	return &ContainerHeader{Header: chunkHeader, format: format}
 }

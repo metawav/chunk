@@ -10,6 +10,7 @@ import (
 )
 
 type Common struct {
+	*Header
 	numChannels     int16
 	numSampleFrames uint32
 	sampleSize      int16
@@ -42,25 +43,41 @@ func (c *Common) CompressionName() string {
 	return string(c.compressionName[:])
 }
 
-// ReadCommonChunk
-func ReadCommonChunk(data []byte) (*Common, error) {
+func (c *Common) String() string {
+	return fmt.Sprintf("%s Channels: %d Sample frames: %d Sample size: %d Sample rate: %d Compression type: %s Compression name: %s", c.Header, c.Channels(), c.SampleFrames(), c.SampleSize(), c.SampleRate(), c.CompressionType(), c.CompressionName())
+}
+
+func (c *Common) Bytes() []byte {
+	bytes := c.Header.Bytes()
+
+	//todo: implement
+
+	return bytes
+}
+
+// DecodeCommonChunk
+func DecodeCommonChunk(data []byte) (*Common, error) {
 	c := &Common{}
 
-	var id FourCC
-	var size int32
-	var compressionNameSize uint8
-	compressionName := make([]byte, compressionNameSize)
-
-	buf := bytes.NewReader(data[:])
 	byteOrder := binary.BigEndian
+	c.Header = decodeChunkHeader(data[:HeaderSizeBytes], 0, byteOrder)
+	var compressionNameSize uint8
 
-	binary.Read(buf, byteOrder, &id)
-	binary.Read(buf, byteOrder, &size)
-	binary.Read(buf, byteOrder, &c.numChannels)
-	binary.Read(buf, byteOrder, &c.numSampleFrames)
-	binary.Read(buf, byteOrder, &c.sampleSize)
-	binary.Read(buf, byteOrder, &c.sampleRate)
-	err := binary.Read(buf, byteOrder, &c.compressionType)
+	buf := bytes.NewReader(data[HeaderSizeBytes:])
+	fields := []interface{}{&c.numChannels, &c.numSampleFrames, &c.sampleSize, &c.sampleRate, &c.compressionType, &compressionNameSize}
+
+	for _, f := range fields {
+		err := binary.Read(buf, byteOrder, f)
+
+		if err != nil {
+			err = handleError(err)
+
+			return c, err
+		}
+	}
+
+	compressionName := make([]byte, compressionNameSize)
+	err := binary.Read(buf, byteOrder, &compressionName)
 
 	if err != nil {
 		err = handleError(err)
@@ -68,8 +85,6 @@ func ReadCommonChunk(data []byte) (*Common, error) {
 		return c, err
 	}
 
-	err = binary.Read(buf, byteOrder, &compressionNameSize)
-	err = binary.Read(buf, byteOrder, &compressionName)
 	c.compressionName = append(c.compressionName, compressionName...)
 
 	return c, nil
@@ -81,8 +96,4 @@ func handleError(err error) error {
 	}
 
 	return err
-}
-
-func (c *Common) String() string {
-	return fmt.Sprintf("Channels: %d Sample frames: %d Sample size: %d Sample rate: %d Compression type: %s Compression name: %s", c.Channels(), c.SampleFrames(), c.SampleSize(), c.SampleRate(), c.CompressionType(), c.CompressionName())
 }
