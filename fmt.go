@@ -17,26 +17,32 @@ type FMT struct {
 	blockAlign    uint16
 }
 
+// Format
 func (fc *FMT) Format() int {
 	return int(fc.format)
 }
 
+// Channels
 func (fc *FMT) Channels() int {
 	return int(fc.channels)
 }
 
+// SamplesPerSec
 func (fc *FMT) SamplesPerSec() int {
 	return int(fc.samplesPerSec)
 }
 
+// BytesPerSec
 func (fc *FMT) BytesPerSec() int {
 	return int(fc.bytesPerSec)
 }
 
+// BlockAlign
 func (fc *FMT) BlockAlign() int {
 	return int(fc.blockAlign)
 }
 
+// String returns string represensation of chunk.
 func (fc *FMT) String() string {
 	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
@@ -97,10 +103,12 @@ func (pfc *PCMFormat) BitsPerSample() int {
 	return int(pfc.bitsPerSample)
 }
 
+// String returns string represensation of chunk.
 func (pfc *PCMFormat) String() string {
 	return fmt.Sprintf("%s\nBits per sample: %d", pfc.FMT, pfc.BitsPerSample())
 }
 
+// Bytes converts PCMFormat to byte array.
 func (pfc *PCMFormat) Bytes() []byte {
 	bytes := pfc.FMT.Bytes()
 

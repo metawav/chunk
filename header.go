@@ -51,6 +51,7 @@ func (h *Header) FullSize() uint32 {
 	return size
 }
 
+// HasPadding returns true when padding byte is added as chunk must be even sized and must start at an even position.
 func (h *Header) HasPadding() bool {
 	isOdd := h.Size()%2 != 0
 
