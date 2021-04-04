@@ -6,7 +6,8 @@ import (
 )
 
 // IEEEFloatToInt converts 80 bit encoded float with extended precision (IEEE 754) to int.
-// see: https://en.wikipedia.org/wiki/Extended_precision
+// For negative values, infinity and NaN (+)0 is returned.
+// See: https://en.wikipedia.org/wiki/Extended_precision
 func IEEEFloatToInt(b [10]byte) uint {
 	// first 2 bytes contain sign and biased exponent
 	se := binary.BigEndian.Uint16(b[:2])
@@ -89,11 +90,6 @@ func IntToIEEE(v uint) [10]byte {
 
 	// first bit is sign
 	var sign uint16
-
-	// 0 = positive, 1 = negative
-	if v < 0 {
-		sign = 1
-	}
 
 	// first 2 bytes contain sign and biased exponent
 	var se uint16 = sign<<15 | exp
