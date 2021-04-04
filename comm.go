@@ -36,7 +36,7 @@ func (c *COMM) SampleSize() int {
 }
 
 // SampleRate
-func (c *COMM) SampleRate() int {
+func (c *COMM) SampleRate() uint {
 	return internal.IEEEFloatToInt(c.sampleRate)
 }
 
@@ -61,6 +61,14 @@ func (c *COMM) Bytes() []byte {
 	//todo: implement
 
 	return bytes
+}
+
+// EncodeCOMMChunk
+func EncodeCOMMChunkChunk(id FourCC, size uint32, numChannels int16, numSamplesPerFrame uint32, sampleSize int16, sampleRate [10]byte, compressionType FourCC, compressionName string) *COMM {
+	//todo: implement
+	header := EncodeChunkHeader(id, size, binary.LittleEndian)
+
+	return &COMM{Header: header}
 }
 
 // DecodeCOMMChunk

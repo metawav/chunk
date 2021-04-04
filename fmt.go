@@ -65,6 +65,13 @@ func (fc *FMT) Bytes() []byte {
 	return bytes
 }
 
+// EncodeFMTChunk
+func EncodeFMTChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16) *FMT {
+	header := EncodeChunkHeader(id, size, binary.LittleEndian)
+
+	return &FMT{Header: header, format: format, channels: channels, samplesPerSec: samplesPerSec, bytesPerSec: bytesPerSec, blockAlign: blockAlign}
+}
+
 // DecodeFMTChunk
 func DecodeFMTChunk(data []byte) (*FMT, error) {
 	if len(data) < int(HeaderSizeBytes) {
@@ -120,6 +127,13 @@ func (pfc *PCMFormat) Bytes() []byte {
 	bytes = append(bytes, data...)
 
 	return bytes
+}
+
+// EncodePCMFormatChunk
+func EncodePCMFormatChunkChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
+	fmt := EncodeFMTChunk(id, size, format, channels, samplesPerSec, bytesPerSec, blockAlign)
+
+	return &PCMFormat{FMT: fmt, bitsPerSample: bitPerSample}
 }
 
 // DecodePCMFormatChunk
