@@ -6,6 +6,34 @@ import (
 	"testing"
 )
 
+func TestEncodeFMThunk(t *testing.T) {
+	chunk := EncodeFMTChunk([4]byte{'f', 'm', 't', ' '}, 14, 0, 1, 44100, 1000, 2)
+
+	if chunk.ID() != "fmt " {
+		t.Errorf("ID is %s, want %s", chunk.ID(), "fmt ")
+	}
+
+	if chunk.Size() != 14 {
+		t.Errorf("size is %d, want %d", chunk.Size(), 14)
+	}
+
+	if chunk.Channels() != 1 {
+		t.Errorf("channels is %d, want %d", chunk.Channels(), 1)
+	}
+
+	if chunk.SamplesPerSec() != 44100 {
+		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), 44100)
+	}
+
+	if chunk.BytesPerSec() != 1000 {
+		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), 1000)
+	}
+
+	if chunk.BlockAlign() != 2 {
+		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), 2)
+	}
+}
+
 func TestDecodeFMTChunk(t *testing.T) {
 	chunk, err := DecodeFMTChunk(nil)
 
@@ -18,7 +46,7 @@ func TestDecodeFMTChunk(t *testing.T) {
 	}
 
 	data := make([]byte, HeaderSizeBytes-1)
-	chunk, err = DecodeFMTChunk(nil)
+	chunk, err = DecodeFMTChunk(data)
 
 	if err == nil {
 		t.Errorf("err should not be nil")
@@ -109,6 +137,38 @@ func TestFMTBytes(t *testing.T) {
 
 	if bytes.Compare(chunk.Bytes(), data) != 0 {
 		t.Errorf("bytes is %v, want %v", chunk.Bytes(), data)
+	}
+}
+
+func TestEncodePCMFormathunk(t *testing.T) {
+	chunk := EncodePCMFormatChunk([4]byte{'f', 'm', 't', ' '}, 14, 0, 1, 44100, 1000, 2, 24)
+
+	if chunk.ID() != "fmt " {
+		t.Errorf("ID is %s, want %s", chunk.ID(), "fmt ")
+	}
+
+	if chunk.Size() != 14 {
+		t.Errorf("size is %d, want %d", chunk.Size(), 14)
+	}
+
+	if chunk.Channels() != 1 {
+		t.Errorf("channels is %d, want %d", chunk.Channels(), 1)
+	}
+
+	if chunk.SamplesPerSec() != 44100 {
+		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), 44100)
+	}
+
+	if chunk.BytesPerSec() != 1000 {
+		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), 1000)
+	}
+
+	if chunk.BlockAlign() != 2 {
+		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), 2)
+	}
+
+	if chunk.BitsPerSample() != 24 {
+		t.Errorf("bits per sample is %d, want %d", chunk.BitsPerSample(), 24)
 	}
 }
 

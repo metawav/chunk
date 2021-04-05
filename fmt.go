@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-// FMT
+// FMT is RIFF format chunk 'fmt ' describing sampled sound in data chunk 'data'.
 type FMT struct {
 	*Header
 	format        uint16
@@ -47,7 +47,7 @@ func (fc *FMT) String() string {
 	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
 
-// Bytes converts FMT to  byte array.
+// Bytes converts FMT to byte array.
 func (fc *FMT) Bytes() []byte {
 	bytes := fc.Header.Bytes()
 
@@ -72,7 +72,14 @@ func EncodeFMTChunk(id FourCC, size uint32, format uint16, channels uint16, samp
 	return &FMT{Header: header, format: format, channels: channels, samplesPerSec: samplesPerSec, bytesPerSec: bytesPerSec, blockAlign: blockAlign}
 }
 
-// DecodeFMTChunk
+// DecodeFMTChunk decodes provided byte array to FMT.
+// Array content is:
+// chunk header - 8 bytes (min. requirement for successful decoding)
+// format - 2 bytes
+// channels - 2 bytes
+// samples per sec - 4 bytes
+// bytes per sec - 4 bytes
+// block align - 2 bytes
 func DecodeFMTChunk(data []byte) (*FMT, error) {
 	if len(data) < int(HeaderSizeBytes) {
 		msg := fmt.Sprintf("data slice requires a minimim lenght of %d", HeaderSizeBytes)
@@ -99,7 +106,7 @@ func DecodeFMTChunk(data []byte) (*FMT, error) {
 	return fc, nil
 }
 
-// PCMFormat
+// PCMFormat is RIFF format chunk 'fmt ' describing sampled sound in data chunk 'data'.
 type PCMFormat struct {
 	*FMT
 	bitsPerSample uint16
@@ -130,13 +137,16 @@ func (pfc *PCMFormat) Bytes() []byte {
 }
 
 // EncodePCMFormatChunk
-func EncodePCMFormatChunkChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
+func EncodePCMFormatChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
 	fmt := EncodeFMTChunk(id, size, format, channels, samplesPerSec, bytesPerSec, blockAlign)
 
 	return &PCMFormat{FMT: fmt, bitsPerSample: bitPerSample}
 }
 
-// DecodePCMFormatChunk
+// DecodePCMFormatChunk decodes provided byte array to PCMFormat.
+// Array content is:
+// FMT - 22 bytes (see FMT)
+// bits per sample - 2 bytes
 func DecodePCMFormatChunk(data []byte) (*PCMFormat, error) {
 	fc, err := DecodeFMTChunk(data)
 
