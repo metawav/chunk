@@ -35,6 +35,29 @@ for _, header := range container.Headers {
     fmt.Printf("%s\n", header)
 }
 ```
+Example output:
+```
+ID: fmt  Size: 16 FullSize: 24 StartPos: 12 HasPadding: false
+ID: data Size: 88200 FullSize: 88208 StartPos: 36 HasPadding: false
+ID: LIST Size: 68 FullSize: 76 StartPos: 88244 HasPadding: false
+ID: JUNK Size: 10 FullSize: 18 StartPos: 88320 HasPadding: false
+```
+### Find format chunk
+```go
+headers := container.FindHeaders("fmt ") // kepp care of trailing space :)
+chunkBytes := make([]byte, headers[0].FullSize())
+_, err = file.ReadAt(chunkBytes, int64(headers[0].StartPos()))
+format, _ := chunk.DecodeFMTChunk(chunkBytes)
+fmt.Printf("%s\n", format)
+```
+Example output:
+```
+Format: 1
+Channels: 1
+Sample rate: 44100
+Byte rate: 88200
+Bytes per sample: 2
+```
 ## Documentation
 See package documentation:
 
