@@ -47,23 +47,30 @@ func (fc *FMT) String() string {
 	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
 
-// Bytes converts FMT to byte array.
-// An amount of 22 bytes is returned.
+// Bytes converts FMT to byte array. A new Header with id 'fmt ' is created.
+//
+// Header size is set to real data size. An amount of 22 bytes is returned.
+// chunk header - 8 bytes
+// format - 2 bytes
+// channels - 2 bytes
+// samples per sec - 4 bytes
+// bytes per sec - 4 bytes
+// block align - 2 bytes
+//
+// A padding byte is added if size is odd. This optional byte is not reflected in size.
 func (fc *FMT) Bytes() []byte {
-	bytes := fc.Header.Bytes()
-
-	data := make([]byte, 14)
 	byteOrder := binary.LittleEndian
-
+	data := make([]byte, 14)
 	byteOrder.PutUint16(data[0:2], fc.format)
 	byteOrder.PutUint16(data[2:4], fc.channels)
 	byteOrder.PutUint32(data[4:8], fc.samplesPerSec)
 	byteOrder.PutUint32(data[8:12], fc.bytesPerSec)
 	byteOrder.PutUint16(data[12:14], fc.blockAlign)
+	dataSize := len(data)
+	fc.Header = EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
+	bytes := append(fc.Header.Bytes(), data...)
 
-	bytes = append(bytes, data...)
-
-	return bytes
+	return pad(bytes)
 }
 
 // EncodeFMTChunk returns encoded chunk 'fmt ' by provided parameters.
@@ -75,7 +82,8 @@ func EncodeFMTChunk(size uint32, format uint16, channels uint16, samplesPerSec u
 }
 
 // DecodeFMTChunk decodes provided byte array to FMT.
-// Array content is:
+//
+// Array content should be:
 // chunk header - 8 bytes (min. requirement for successful decoding)
 // format - 2 bytes
 // channels - 2 bytes
@@ -124,19 +132,24 @@ func (pfc *PCMFormat) String() string {
 	return fmt.Sprintf("%s\nBits per sample: %d", pfc.FMT, pfc.BitsPerSample())
 }
 
-// Bytes converts PCMFormat to byte array.
-// An amount of 24 bytes is returned.
+// Bytes converts PCMFormat to byte array. A new Header with id 'fmt ' is created.
+//
+// Header size is set to real data size. An amount of 24 bytes is returned.
+// FMT - 22 bytes (see FMT)
+// bits per sample - 2 bytes
+//
+// A padding byte is added if size is odd. This optional byte is not reflected in size.
 func (pfc *PCMFormat) Bytes() []byte {
-	bytes := pfc.FMT.Bytes()
-
-	data := make([]byte, 2)
 	byteOrder := binary.LittleEndian
-
+	data := make([]byte, 2)
 	byteOrder.PutUint16(data[0:2], pfc.bitsPerSample)
+	fmtBytes := pfc.FMT.Bytes()
+	data = append(fmtBytes[HeaderSizeBytes:], data...)
+	dataSize := len(data)
+	pfc.Header = EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
+	bytes := append(pfc.Header.Bytes(), data...)
 
-	bytes = append(bytes, data...)
-
-	return bytes
+	return pad(bytes)
 }
 
 // EncodePCMFormatChunk returns encoded chunk 'fmt ' by provided parameters.
@@ -147,7 +160,8 @@ func EncodePCMFormatChunk(size uint32, format uint16, channels uint16, samplesPe
 }
 
 // DecodePCMFormatChunk decodes provided byte array to PCMFormat.
-// Array content is:
+//
+// Array content should be:
 // FMT - 22 bytes (see FMT)
 // bits per sample - 2 bytes
 func DecodePCMFormatChunk(data []byte) (*PCMFormat, error) {

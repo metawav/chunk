@@ -1,7 +1,6 @@
 package chunk
 
 import (
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -135,9 +134,8 @@ func TestFMTBytes(t *testing.T) {
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+12:HeaderSizeBytes+14], blockAlign)
 	chunk, _ := DecodeFMTChunk(data)
 
-	if bytes.Compare(chunk.Bytes(), data) != 0 {
-		t.Errorf("bytes is %v, want %v", chunk.Bytes(), data)
-	}
+	assertEqual(t, len(chunk.Bytes()), len(data), "bytes length after DecodeFMTChunk")
+	assertEqual(t, chunk.Size(), uint32(len(data))-HeaderSizeBytes, "size after DecodeFMTChunk")
 }
 
 func TestEncodePCMFormathunk(t *testing.T) {
@@ -250,7 +248,6 @@ func TestPCMFormatBytes(t *testing.T) {
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+14:HeaderSizeBytes+16], bitsPerSample)
 	chunk, _ := DecodePCMFormatChunk(data)
 
-	if bytes.Compare(chunk.Bytes(), data) != 0 {
-		t.Errorf("bytes is %v, want %v", chunk.Bytes(), data)
-	}
+	assertEqual(t, len(chunk.Bytes()), len(data), "bytes length after DecodePCMFormatChunk")
+	assertEqual(t, chunk.Size(), uint32(len(data))-HeaderSizeBytes, "size after DecodePCMFormatChunk")
 }

@@ -1,11 +1,19 @@
 # chunk [![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
-Library for reading chunked media container files like RIFF/ AIFF.
+Library for decoding and encoding chunked audio containers like RIFF / AIFF.
 
 ## Features
-- Decode / Encode chunk headers of RIFF / AIFF / AIFF-C
-- Decode / Encode chunks 'fmt ' and 'COMM'
-- Decode / Encode container header
-- Get byte array representations of known chunks for further processing
+- Supported formats: 
+  - Waveform Audio File Format (WAVE)
+  - Broadcast Wave Format (BWF)
+  - Audio Interchange File Format (AIFF, AIFF-C)
+- Supported chunks (Decode / Encode)
+  - 'fmt ' - WAVE format and PCM format
+  - 'COMM' - Common
+  - 'bext' - Broadcast Extension for sound metadata in BWF (version 0, 1, 2)
+  - 'iXML' - Extenson for sound metadata in BWF (iXML Specification Revision 2.10)
+- Decode headers of unknown chunks
+- Encode custom header
+- Byte array presentation of known chunks for further processing
 
 ## Prerequisites
 Download and install `chunk` into your GOPATH.
@@ -107,4 +115,4 @@ See package documentation:
 [![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
 
 ## License
-`metawav` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).
+`chunk` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).

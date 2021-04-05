@@ -7,11 +7,10 @@ import (
 
 // Header carries the following information of a chunk: ID, size and start position in a RIFF file
 type Header struct {
-	id         uint32
-	size       uint32
-	startPos   uint32
-	hasPadding bool
-	byteOrder  binary.ByteOrder
+	id        uint32
+	size      uint32
+	startPos  uint32
+	byteOrder binary.ByteOrder
 }
 
 // ID is a 4-letter chunk identifier
@@ -87,4 +86,14 @@ func decodeChunkHeader(bytes []byte, startPos uint32, byteOrder binary.ByteOrder
 	chunkHeader := DecodeChunkHeader(headerBytes, startPos, byteOrder)
 
 	return chunkHeader
+}
+
+// pad adds a pad byte with value 0 if data size is odd.
+func pad(data []byte) []byte {
+	if len(data)%2 == 0 {
+		return data
+	}
+
+	var pad byte
+	return append(data, pad)
 }

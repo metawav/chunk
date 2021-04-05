@@ -1,7 +1,6 @@
 package chunk
 
 import (
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -41,7 +40,7 @@ func TestEncodeCommChunk(t *testing.T) {
 		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), "no compression")
 	}
 
-	var longNameBytes = make([]byte, 256)
+	var longNameBytes = make([]byte, 255)
 
 	for i := 0; i < len(longNameBytes); i++ {
 		longNameBytes[i] = 65
@@ -61,7 +60,7 @@ func TestEncodeCommChunk(t *testing.T) {
 
 	chunk = EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
 
-	if len([]byte(chunk.CompressionName())) != 256 {
+	if len([]byte(chunk.CompressionName())) != 255 {
 		t.Errorf("compression name length is %d, want %d", len([]byte(chunk.CompressionName())), 256)
 	}
 }
@@ -163,15 +162,32 @@ func TestCommBytes(t *testing.T) {
 	expectedData := make([]byte, 30)
 
 	chunk, _ := DecodeCOMMChunk(data)
+	bytes := chunk.Bytes()
 
-	if bytes.Compare(chunk.Bytes(), expectedData) != 0 {
-		t.Errorf("bytes length is %d, want %d", len(chunk.Bytes()), len(expectedData))
-	}
+	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
+	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 
-	expectedData = make([]byte, 46)
-	chunk = EncodeCOMMChunk(32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), "no compression")
+	compressionName := createTestString(14)
+	expectedData = make([]byte, 30+14+2)
+	chunk = EncodeCOMMChunk(32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), compressionName)
+	bytes = chunk.Bytes()
 
-	if len(chunk.Bytes()) != len(expectedData) {
-		t.Errorf("bytes length is %d, want %d", len(chunk.Bytes()), len(expectedData))
-	}
+	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
+	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
+
+	compressionName = createTestString(255)
+	expectedData = make([]byte, 30+256)
+	chunk = EncodeCOMMChunk(32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), compressionName)
+	bytes = chunk.Bytes()
+
+	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
+	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
+
+	compressionName = createTestString(256)
+	expectedData = make([]byte, 30+256)
+	chunk = EncodeCOMMChunk(32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), compressionName)
+	bytes = chunk.Bytes()
+
+	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
+	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 }
