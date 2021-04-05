@@ -2,10 +2,10 @@
 Library for reading chunked media container files like RIFF/ AIFF.
 
 ## Features
-- Display headers of contained chunks of RIFF / AIFF / AIFF-C
+- Decode / Encode chunk headers of RIFF / AIFF / AIFF-C
 - Decode / Encode chunks 'fmt ' and 'COMM'
-- Decode / Encode chunk header
 - Decode / Encode container header
+- Get byte array representations of known chunks for further processing
 
 ## Prerequisites
 Download and install `wav` into your GOPATH.
