@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pmoule/wav/internal"
+	"github.com/metawav/chunk/internal"
 )
 
 // COMM is AIFF / AIFF-C common chunk 'COMM' describing sampled sound in sound chunk 'SSND'.

@@ -1,4 +1,4 @@
-# wav [![GoDoc](https://godoc.org/github.com/pmoule/wav?status.svg)](https://godoc.org/github.com/pmoule/wav)
+# chunk [![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
 Library for reading chunked media container files like RIFF/ AIFF.
 
 ## Features
@@ -8,13 +8,13 @@ Library for reading chunked media container files like RIFF/ AIFF.
 - Get byte array representations of known chunks for further processing
 
 ## Prerequisites
-Download and install `wav` into your GOPATH.
+Download and install `chunk` into your GOPATH.
 ```
-go get github.com/pmoule/wav
+go get github.com/metawav/chunk
 ```
 Import the package to get started.
 ```go
-import chunk "github.com/pmoule/wav"
+import "github.com/metawav/chunk"
 ```
 ## Examples
 ### Read headers from RIFF (.wav) file
@@ -104,7 +104,7 @@ Example output:
 ## Documentation
 See package documentation:
 
-[![GoDoc](https://godoc.org/github.com/pmoule/wav?status.svg)](https://godoc.org/github.com/pmoule/wav)
+[![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
 
 ## License
-`wav` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).
+`metawav` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).
