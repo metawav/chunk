@@ -7,7 +7,7 @@ import (
 )
 
 func TestEncodeCommChunk(t *testing.T) {
-	chunk := EncodeCOMMChunk(CreateFourCC("COMM"), 32, 2, 100, 200, 44100, CreateFourCC("NONE"), "no compression")
+	chunk := EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), "no compression")
 
 	if chunk.ID() != "COMM" {
 		t.Errorf("ID is %s, want %s", chunk.ID(), "COMM")
@@ -47,7 +47,7 @@ func TestEncodeCommChunk(t *testing.T) {
 		longNameBytes[i] = 65
 	}
 
-	chunk = EncodeCOMMChunk(CreateFourCC("COMM"), 32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
+	chunk = EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
 
 	if chunk.CompressionName() != string(longNameBytes) {
 		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), string(longNameBytes))
@@ -59,7 +59,7 @@ func TestEncodeCommChunk(t *testing.T) {
 		longNameBytes[i] = 65
 	}
 
-	chunk = EncodeCOMMChunk(CreateFourCC("COMM"), 32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
+	chunk = EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
 
 	if len([]byte(chunk.CompressionName())) != 256 {
 		t.Errorf("compression name length is %d, want %d", len([]byte(chunk.CompressionName())), 256)
@@ -169,7 +169,7 @@ func TestCommBytes(t *testing.T) {
 	}
 
 	expectedData = make([]byte, 46)
-	chunk = EncodeCOMMChunk(CreateFourCC("COMM"), 32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), "no compression")
+	chunk = EncodeCOMMChunk(32, int16(chunk.Channels()), uint32(chunk.SampleFrames()), int16(chunk.SampleSize()), chunk.SampleRate(), CreateFourCC("NONE"), "no compression")
 
 	if len(chunk.Bytes()) != len(expectedData) {
 		t.Errorf("bytes length is %d, want %d", len(chunk.Bytes()), len(expectedData))

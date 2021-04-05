@@ -67,7 +67,8 @@ func (fc *FMT) Bytes() []byte {
 }
 
 // EncodeFMTChunk returns encoded chunk 'fmt ' by provided parameters.
-func EncodeFMTChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16) *FMT {
+func EncodeFMTChunk(size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16) *FMT {
+	id := CreateFourCC(FMTID)
 	header := EncodeChunkHeader(id, size, binary.LittleEndian)
 
 	return &FMT{Header: header, format: format, channels: channels, samplesPerSec: samplesPerSec, bytesPerSec: bytesPerSec, blockAlign: blockAlign}
@@ -139,8 +140,8 @@ func (pfc *PCMFormat) Bytes() []byte {
 }
 
 // EncodePCMFormatChunk returns encoded chunk 'fmt ' by provided parameters.
-func EncodePCMFormatChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
-	fmt := EncodeFMTChunk(id, size, format, channels, samplesPerSec, bytesPerSec, blockAlign)
+func EncodePCMFormatChunk(size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
+	fmt := EncodeFMTChunk(size, format, channels, samplesPerSec, bytesPerSec, blockAlign)
 
 	return &PCMFormat{FMT: fmt, bitsPerSample: bitPerSample}
 }

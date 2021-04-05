@@ -11,4 +11,8 @@ const (
 	FormatSizeBytes uint32 = 4
 	// ContainerHeaderSizeBytes is byte size of the container header
 	ContainerHeaderSizeBytes uint32 = HeaderSizeBytes + FormatSizeBytes
+	// Format chunk ID
+	FMTID = "fmt "
+	// Common chunk ID
+	COMMID = "COMM"
 )

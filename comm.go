@@ -94,7 +94,8 @@ func (c *COMM) Bytes() []byte {
 }
 
 // EncodeCOMMChunk returns encoded chunk 'COMM' by provided parameters.
-func EncodeCOMMChunk(id FourCC, size uint32, numChannels int16, numSamplesPerFrame uint32, sampleSize int16, sampleRate uint, compressionType FourCC, compressionName string) *COMM {
+func EncodeCOMMChunk(size uint32, numChannels int16, numSamplesPerFrame uint32, sampleSize int16, sampleRate uint, compressionType FourCC, compressionName string) *COMM {
+	id := CreateFourCC(COMMID)
 	header := EncodeChunkHeader(id, size, binary.LittleEndian)
 
 	sRate := internal.IntToIEEE(sampleRate)
