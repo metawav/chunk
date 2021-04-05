@@ -14,7 +14,7 @@ go get github.com/pmoule/wav
 ```
 Import the package to get started.
 ```go
-import "github.com/pmoule/wav"
+import chunk "github.com/pmoule/wav"
 ```
 ## Examples
 ### Read headers from RIFF (.wav) file
@@ -47,7 +47,17 @@ ID: JUNK Size: 10 FullSize: 18 StartPos: 88320 HasPadding: false
 headers := container.FindHeaders("fmt ") // keep care of trailing space :)
 chunkBytes := make([]byte, headers[0].FullSize())
 _, err = file.ReadAt(chunkBytes, int64(headers[0].StartPos()))
-format, _ := chunk.DecodePCMFormatChunk(chunkBytes)
+
+if err != nil {
+    //handle err
+}
+
+format, err := chunk.DecodePCMFormatChunk(chunkBytes)
+
+if err != nil {
+    //handle err
+}
+
 fmt.Printf("%s\n", format)
 ```
 Example output:
@@ -61,8 +71,7 @@ Bits per sample: 16
 ```
 ### Encode format chunk
 ```go
-id := chunk.CreateFourCC("fmt ")
-format = chunk.EncodePCMFormatChunk(id, 16, 1, 1, 44100, 88200, 2, 24)
+format = chunk.EncodePCMFormatChunk(16, 1, 1, 44100, 88200, 2, 24)
 fmt.Printf("%s\n", format)
 ```
 Example output:
@@ -76,8 +85,7 @@ Bits per sample: 24
 ```
 ### Get bytes representation of format chunk
 ```go
-id := chunk.CreateFourCC("fmt ")
-format = chunk.EncodePCMFormatChunk(id, 16, 1, 1, 44100, 88200, 2, 24)
+format = chunk.EncodePCMFormatChunk(16, 1, 1, 44100, 88200, 2, 24)
 fmt.Printf("%08b\n", format.Bytes())
 ```
 Example output:
