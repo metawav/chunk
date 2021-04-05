@@ -1,4 +1,4 @@
-# wav
+# wav [![GoDoc](https://godoc.org/github.com/pmoule/wav?status.svg)](https://godoc.org/github.com/pmoule/wav)
 Library for reading chunked media container files like RIFF/ AIFF.
 
 ## Features
