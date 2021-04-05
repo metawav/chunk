@@ -183,6 +183,18 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 		t.Errorf("chunk should be be nil")
 	}
 
+	dataMinSize := 22
+	data := make([]byte, dataMinSize-1)
+	chunk, err = DecodePCMFormatChunk(data)
+
+	if err == nil {
+		t.Errorf("err should not be nil")
+	}
+
+	if chunk != nil {
+		t.Errorf("chunk should be be nil")
+	}
+
 	fmtData := make([]byte, 22)
 	var format uint16 = 1
 	binary.LittleEndian.PutUint16(fmtData[HeaderSizeBytes:HeaderSizeBytes+2], format)
@@ -196,7 +208,7 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 	binary.LittleEndian.PutUint16(fmtData[HeaderSizeBytes+12:HeaderSizeBytes+14], blockAlign)
 	fmt, _ := DecodeFMTChunk(fmtData)
 
-	data := make([]byte, len(fmt.Bytes())-1)
+	data = make([]byte, len(fmt.Bytes())-1)
 	chunk, err = DecodePCMFormatChunk(data)
 
 	if err == nil {

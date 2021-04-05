@@ -40,6 +40,30 @@ func TestEncodeCommChunk(t *testing.T) {
 	if chunk.CompressionName() != "no compression" {
 		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), "no compression")
 	}
+
+	var longNameBytes = make([]byte, 256)
+
+	for i := 0; i < len(longNameBytes); i++ {
+		longNameBytes[i] = 65
+	}
+
+	chunk = EncodeCOMMChunk([4]byte{'C', 'O', 'M', 'M'}, 32, 2, 100, 200, 44100, [4]byte{'N', 'O', 'N', 'E'}, string(longNameBytes))
+
+	if chunk.CompressionName() != string(longNameBytes) {
+		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), string(longNameBytes))
+	}
+
+	longNameBytes = make([]byte, 257)
+
+	for i := 0; i < len(longNameBytes); i++ {
+		longNameBytes[i] = 65
+	}
+
+	chunk = EncodeCOMMChunk([4]byte{'C', 'O', 'M', 'M'}, 32, 2, 100, 200, 44100, [4]byte{'N', 'O', 'N', 'E'}, string(longNameBytes))
+
+	if len([]byte(chunk.CompressionName())) != 256 {
+		t.Errorf("compression name length is %d, want %d", len([]byte(chunk.CompressionName())), 256)
+	}
 }
 func TestDecodeCommChunk(t *testing.T) {
 	chunk, err := DecodeCOMMChunk(nil)

@@ -87,7 +87,7 @@ func readContainerHeader(reader io.ReadSeeker, byteOrder binary.ByteOrder) (*Con
 		return nil, err
 	}
 
-	header := DecodeContainerHeader(headerBytes, byteOrder)
+	header, err := DecodeContainerHeader(headerBytes[:], byteOrder)
 
-	return header, nil
+	return header, err
 }

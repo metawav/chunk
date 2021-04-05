@@ -2,6 +2,7 @@ package chunk
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -24,8 +25,22 @@ func (rh *ContainerHeader) String() string {
 	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d Format: %s", rh.ID(), rh.Size(), rh.FullSize(), rh.StartPos(), rh.Format())
 }
 
+// Bytes converts ContainerHeader to byte array.
+// An amount of 12 bytes is returned.
+func (rh *ContainerHeader) Bytes() []byte {
+	bytes := rh.Header.Bytes()
+
+	data := make([]byte, 4)
+
+	rh.Header.byteOrder.PutUint32(data[0:4], rh.format)
+
+	bytes = append(bytes, data...)
+
+	return bytes
+}
+
 // EncodeContainerHeader encodes provided id, size and format to ContainerHeader.
-func EncodeContainerHeader(id FourCC, size uint32, format *FourCC, byteOrder binary.ByteOrder) *ContainerHeader {
+func EncodeContainerHeader(id FourCC, size uint32, format FourCC, byteOrder binary.ByteOrder) *ContainerHeader {
 	chunkHeader := EncodeChunkHeader(id, size, byteOrder)
 	formatVal := format.ToUint32()
 
@@ -33,9 +48,14 @@ func EncodeContainerHeader(id FourCC, size uint32, format *FourCC, byteOrder bin
 }
 
 // DecodeContainerHeader decodes container header from bytes.
-func DecodeContainerHeader(bytes [ContainerHeaderSizeBytes]byte, byteOrder binary.ByteOrder) *ContainerHeader {
-	chunkHeader := decodeChunkHeader(bytes[:HeaderSizeBytes], 0, byteOrder)
-	format := binary.BigEndian.Uint32(bytes[HeaderSizeBytes : HeaderSizeBytes+FormatSizeBytes])
+func DecodeContainerHeader(data []byte, byteOrder binary.ByteOrder) (*ContainerHeader, error) {
+	if len(data) < int(ContainerHeaderSizeBytes) {
+		msg := fmt.Sprintf("data slice requires a minimim lenght of %d", HeaderSizeBytes)
+		return nil, errors.New(msg)
+	}
 
-	return &ContainerHeader{Header: chunkHeader, format: format}
+	chunkHeader := decodeChunkHeader(data[:HeaderSizeBytes], 0, byteOrder)
+	format := binary.BigEndian.Uint32(data[HeaderSizeBytes : HeaderSizeBytes+FormatSizeBytes])
+
+	return &ContainerHeader{Header: chunkHeader, format: format}, nil
 }

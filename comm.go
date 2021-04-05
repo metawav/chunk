@@ -93,7 +93,7 @@ func (c *COMM) Bytes() []byte {
 	return bytes
 }
 
-// EncodeCOMMChunk return COMM encoded by provided parameters.
+// EncodeCOMMChunk returns encoded chunk 'COMM' by provided parameters.
 func EncodeCOMMChunk(id FourCC, size uint32, numChannels int16, numSamplesPerFrame uint32, sampleSize int16, sampleRate uint, compressionType FourCC, compressionName string) *COMM {
 	header := EncodeChunkHeader(id, size, binary.LittleEndian)
 

@@ -48,6 +48,7 @@ func (fc *FMT) String() string {
 }
 
 // Bytes converts FMT to byte array.
+// An amount of 22 bytes is returned.
 func (fc *FMT) Bytes() []byte {
 	bytes := fc.Header.Bytes()
 
@@ -65,7 +66,7 @@ func (fc *FMT) Bytes() []byte {
 	return bytes
 }
 
-// EncodeFMTChunk
+// EncodeFMTChunk returns encoded chunk 'fmt ' by provided parameters.
 func EncodeFMTChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16) *FMT {
 	header := EncodeChunkHeader(id, size, binary.LittleEndian)
 
@@ -123,6 +124,7 @@ func (pfc *PCMFormat) String() string {
 }
 
 // Bytes converts PCMFormat to byte array.
+// An amount of 24 bytes is returned.
 func (pfc *PCMFormat) Bytes() []byte {
 	bytes := pfc.FMT.Bytes()
 
@@ -136,7 +138,7 @@ func (pfc *PCMFormat) Bytes() []byte {
 	return bytes
 }
 
-// EncodePCMFormatChunk
+// EncodePCMFormatChunk returns encoded chunk 'fmt ' by provided parameters.
 func EncodePCMFormatChunk(id FourCC, size uint32, format uint16, channels uint16, samplesPerSec uint32, bytesPerSec uint32, blockAlign uint16, bitPerSample uint16) *PCMFormat {
 	fmt := EncodeFMTChunk(id, size, format, channels, samplesPerSec, bytesPerSec, blockAlign)
 

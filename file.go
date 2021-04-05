@@ -1,5 +1,12 @@
 package chunk
 
+// SortHeadersByStartPosAsc sorts headers by start position in ascending order.
+// type SortHeadersByStartPosAsc []*Header
+
+// func (a SortHeadersByStartPosAsc) Len() int           { return len(a) }
+// func (a SortHeadersByStartPosAsc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+// func (a SortHeadersByStartPosAsc) Less(i, j int) bool { return a[i].StartPos() < a[j].StartPos() }
+
 // // todo: chunk ids might not be unique. Better delete by offset => GetHeaderByStartPos
 // // DeleteChunk
 // func (rf *File) DeleteChunk(headerID string, reader io.ReaderAt, writer io.WriterAt) (uint32, error) {

@@ -14,13 +14,6 @@ type Header struct {
 	byteOrder  binary.ByteOrder
 }
 
-// SortHeadersByStartPosAsc sorts headers by start position in ascending order.
-type SortHeadersByStartPosAsc []*Header
-
-func (a SortHeadersByStartPosAsc) Len() int           { return len(a) }
-func (a SortHeadersByStartPosAsc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a SortHeadersByStartPosAsc) Less(i, j int) bool { return a[i].StartPos() < a[j].StartPos() }
-
 // ID is a 4-letter chunk identifier
 func (h *Header) ID() string {
 	val := make([]byte, 4)
@@ -40,7 +33,7 @@ func (h *Header) Size() uint32 {
 	return h.size
 }
 
-// FullSize is the chunk size in bytes.
+// FullSize is the chunk size in bytes including optional padding byte.
 func (h *Header) FullSize() uint32 {
 	size := h.size + HeaderSizeBytes
 
@@ -63,7 +56,8 @@ func (h *Header) String() string {
 	return fmt.Sprintf("ID: %s Size: %d FullSize: %d StartPos: %d HasPadding: %t", h.ID(), h.Size(), h.FullSize(), h.StartPos(), h.HasPadding())
 }
 
-// Bytes converts Header to  byte array.
+// Bytes converts Header to byte array.
+// An amount of 8 bytes is returned.
 func (h *Header) Bytes() []byte {
 	bytes := make([]byte, HeaderSizeBytes)
 	binary.BigEndian.PutUint32(bytes[:IDSizeBytes], h.id)
