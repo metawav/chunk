@@ -7,7 +7,7 @@ import (
 )
 
 func TestEncodeFMThunk(t *testing.T) {
-	chunk := EncodeFMTChunk([4]byte{'f', 'm', 't', ' '}, 14, 0, 1, 44100, 1000, 2)
+	chunk := EncodeFMTChunk(CreateFourCC("fmt "), 14, 0, 1, 44100, 1000, 2)
 
 	if chunk.ID() != "fmt " {
 		t.Errorf("ID is %s, want %s", chunk.ID(), "fmt ")
@@ -141,7 +141,7 @@ func TestFMTBytes(t *testing.T) {
 }
 
 func TestEncodePCMFormathunk(t *testing.T) {
-	chunk := EncodePCMFormatChunk([4]byte{'f', 'm', 't', ' '}, 14, 0, 1, 44100, 1000, 2, 24)
+	chunk := EncodePCMFormatChunk(CreateFourCC("fmt "), 14, 0, 1, 44100, 1000, 2, 24)
 
 	if chunk.ID() != "fmt " {
 		t.Errorf("ID is %s, want %s", chunk.ID(), "fmt ")

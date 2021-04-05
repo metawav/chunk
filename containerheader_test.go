@@ -7,7 +7,7 @@ import (
 )
 
 func TestEncodeContainerHeader(t *testing.T) {
-	header := EncodeContainerHeader([4]byte{'R', 'I', 'F', 'F'}, 4, [4]byte{'W', 'A', 'V', 'E'}, binary.LittleEndian)
+	header := EncodeContainerHeader(CreateFourCC("RIFF"), 4, CreateFourCC("WAVE"), binary.LittleEndian)
 
 	if header.ID() != "RIFF" {
 		t.Errorf("ID is %s, want %s", header.ID(), "RIFF")
@@ -61,7 +61,7 @@ func TestDecodeContainerHeader(t *testing.T) {
 
 	data = make([]byte, ContainerHeaderSizeBytes)
 
-	format := [4]byte{'W', 'A', 'V', 'E'}
+	format := CreateFourCC("WAVE")
 	copy(data[HeaderSizeBytes:], format[:])
 	header, err = DecodeContainerHeader(data, binary.LittleEndian)
 
