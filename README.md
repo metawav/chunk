@@ -41,4 +41,4 @@ See package documentation:
 [![GoDoc](https://godoc.org/github.com/pmoule/wav?status.svg)](https://godoc.org/github.com/pmoule/wav)
 
 ## License
-`go2hal` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).
+`wav` is released under Apache License, Version 2.0. See [LICENSE](LICENSE.txt).
