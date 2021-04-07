@@ -10,7 +10,7 @@ Library for decoding and encoding chunked audio containers like RIFF / AIFF.
   - 'fmt ' - WAVE format and PCM format
   - 'COMM' - Common
   - 'bext' - Broadcast Extension for sound metadata in BWF (version 0, 1, 2)
-  - 'iXML' - Extenson for sound metadata in BWF (iXML Specification Revision 2.10)
+  - 'iXML' - Extension for sound metadata in BWF (iXML Specification Revision 2.10)
 - Decode headers of unknown chunks
 - Encode custom header
 - Byte array presentation of known chunks for further processing
