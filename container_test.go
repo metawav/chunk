@@ -30,16 +30,12 @@ func TestFindHeaders(t *testing.T) {
 		t.Errorf("headers should be returned")
 	}
 
-	if len(headers) != 1 {
-		t.Errorf("headers size is %d, want %d", len(headers), 1)
-	}
+	assertEqual(t, len(headers), 1, "headers length")
 
 	riffFile.Headers = append(riffFile.Headers, header)
 	headers = riffFile.FindHeaders(string(headerID[:]))
 
-	if len(headers) != 2 {
-		t.Errorf("headers size is %d, want %d", len(headers), 2)
-	}
+	assertEqual(t, len(headers), 2, "headers length")
 }
 
 func TestReadRiff(t *testing.T) {
@@ -48,29 +44,16 @@ func TestReadRiff(t *testing.T) {
 	reader := strings.NewReader(string(content))
 	riff, err := ReadRiff(fileName, reader)
 
-	if err == nil {
-		t.Errorf("error should be returned with file %s", fileName)
-	}
-
-	if riff != nil {
-		t.Errorf("riff file should not be returned with file %s", fileName)
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, riff, "riff should be nil")
 
 	content = make([]byte, ContainerHeaderSizeBytes)
 	reader = strings.NewReader(string(content))
 	riff, err = ReadRiff(fileName, reader)
 
-	if err != nil {
-		t.Errorf("error should not be returned with file %s", fileName)
-	}
-
-	if riff == nil {
-		t.Errorf("riff file should be returned with file %s", fileName)
-	}
-
-	if len(riff.Headers) != 0 {
-		t.Errorf("headers have a length of %d, wanted 0", len(riff.Headers))
-	}
+	assertNil(t, err, "err should be nil")
+	assertNotNil(t, riff, "riff should not be nil")
+	assertEqual(t, len(riff.Headers), 0, "headers length")
 
 	if riff.Headers != nil {
 		t.Errorf("headers should be nil")
@@ -80,9 +63,7 @@ func TestReadRiff(t *testing.T) {
 	reader = strings.NewReader(string(content))
 	riff, err = ReadRiff(fileName, reader)
 
-	if len(riff.Headers) != 1 {
-		t.Errorf("headers have a length of %d, wanted 1", len(riff.Headers))
-	}
+	assertEqual(t, len(riff.Headers), 1, "headers length")
 
 	headerID := createID("test")
 	var headerSize int = 12
@@ -95,9 +76,7 @@ func TestReadRiff(t *testing.T) {
 	reader = strings.NewReader(string(content))
 	riff, err = ReadRiff(fileName, reader)
 
-	if len(riff.Headers) != 2 {
-		t.Errorf("headers have a length of %d, wanted 2", len(riff.Headers))
-	}
+	assertEqual(t, len(riff.Headers), 2, "headers length")
 }
 
 func createID(idVal string) [IDSizeBytes]byte {

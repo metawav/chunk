@@ -404,8 +404,6 @@ func DecodeBextChunk(data []byte) (*Bext, error) {
 		err := binary.Read(buf, byteOrder, f)
 
 		if err != nil {
-			err = handleError(err)
-
 			return b, err
 		}
 	}
@@ -414,8 +412,6 @@ func DecodeBextChunk(data []byte) (*Bext, error) {
 	err := binary.Read(buf, byteOrder, &b.codingHistory)
 
 	if err != nil {
-		err = handleError(err)
-
 		return b, err
 	}
 

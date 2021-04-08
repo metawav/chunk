@@ -106,8 +106,6 @@ func DecodeFMTChunk(data []byte) (*FMT, error) {
 		err := binary.Read(buf, byteOrder, f)
 
 		if err != nil {
-			err = handleError(err)
-
 			return fc, err
 		}
 	}

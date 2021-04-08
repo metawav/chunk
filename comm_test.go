@@ -8,37 +8,14 @@ import (
 func TestEncodeCommChunk(t *testing.T) {
 	chunk := EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), "no compression")
 
-	if chunk.ID() != "COMM" {
-		t.Errorf("ID is %s, want %s", chunk.ID(), "COMM")
-	}
-
-	if chunk.Size() != 32 {
-		t.Errorf("size is %d, want %d", chunk.Size(), 32)
-	}
-
-	if chunk.Channels() != 2 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 2)
-	}
-
-	if chunk.SampleFrames() != 100 {
-		t.Errorf("sample frames is %d, want %d", chunk.SampleFrames(), 100)
-	}
-
-	if chunk.SampleSize() != 200 {
-		t.Errorf("sample size is %d, want %d", chunk.SampleSize(), 200)
-	}
-
-	if chunk.SampleRate() != 44100 {
-		t.Errorf("sample rate is %d, want %d", chunk.SampleRate(), 44100)
-	}
-
-	if chunk.CompressionType() != "NONE" {
-		t.Errorf("compression type is %s, want %s", chunk.CompressionType(), "NONE")
-	}
-
-	if chunk.CompressionName() != "no compression" {
-		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), "no compression")
-	}
+	assertEqual(t, chunk.ID(), COMMID, "ID")
+	assertEqual(t, chunk.Size(), uint32(32), "Size")
+	assertEqual(t, chunk.Channels(), 2, "Channels")
+	assertEqual(t, chunk.SampleFrames(), 100, "SampleFrames")
+	assertEqual(t, chunk.SampleSize(), 200, "SampleSize")
+	assertEqual(t, chunk.SampleRate(), uint(44100), "SampleRate")
+	assertEqual(t, chunk.CompressionType(), "NONE", "CompressionType")
+	assertEqual(t, chunk.CompressionName(), "no compression", "CompressionName")
 
 	var longNameBytes = make([]byte, 255)
 
@@ -48,9 +25,7 @@ func TestEncodeCommChunk(t *testing.T) {
 
 	chunk = EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
 
-	if chunk.CompressionName() != string(longNameBytes) {
-		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), string(longNameBytes))
-	}
+	assertEqual(t, chunk.CompressionName(), string(longNameBytes), "CompressionName")
 
 	longNameBytes = make([]byte, 257)
 
@@ -60,62 +35,30 @@ func TestEncodeCommChunk(t *testing.T) {
 
 	chunk = EncodeCOMMChunk(32, 2, 100, 200, 44100, CreateFourCC("NONE"), string(longNameBytes))
 
-	if len([]byte(chunk.CompressionName())) != 255 {
-		t.Errorf("compression name length is %d, want %d", len([]byte(chunk.CompressionName())), 256)
-	}
+	assertEqual(t, len([]byte(chunk.CompressionName())), 255, "CompressionName length")
 }
 func TestDecodeCommChunk(t *testing.T) {
 	chunk, err := DecodeCOMMChunk(nil)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	data := make([]byte, HeaderSizeBytes-1)
 	chunk, err = DecodeCOMMChunk(data)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	data = make([]byte, HeaderSizeBytes)
 	chunk, err = DecodeCOMMChunk(data)
 
-	if err != nil {
-		t.Errorf("err should be nil")
-	}
-
-	if chunk.Header == nil {
-		t.Errorf("header is nil")
-	}
-
-	if chunk.Channels() != 0 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 0)
-	}
-
-	if chunk.SampleFrames() != 0 {
-		t.Errorf("sample frames is %d, want %d", chunk.SampleFrames(), 0)
-	}
-
-	if chunk.SampleSize() != 0 {
-		t.Errorf("sample size is %d, want %d", chunk.SampleSize(), 0)
-	}
-
-	if chunk.CompressionType() != "" {
-		t.Errorf("compression type length is %s, want %s", chunk.CompressionType(), "")
-	}
-
-	if chunk.CompressionName() != "" {
-		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), "")
-	}
+	assertNotNil(t, err, "err should not be nil when DecodeCOMMChunk with not enough data")
+	assertNotNil(t, chunk.Header, "header is nil")
+	assertEqual(t, chunk.Channels(), 0, "Channels")
+	assertEqual(t, chunk.SampleFrames(), 0, "SampleFrames")
+	assertEqual(t, chunk.SampleSize(), 0, "SampleSize")
+	assertEqual(t, chunk.CompressionType(), "", "CompressionType")
+	assertEqual(t, chunk.CompressionName(), "", "CompressionName")
 
 	data2 := make([]byte, 45)
 	var channels uint16 = 1
@@ -136,25 +79,11 @@ func TestDecodeCommChunk(t *testing.T) {
 
 	chunk, _ = DecodeCOMMChunk(data2)
 
-	if chunk.Channels() != 1 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 0)
-	}
-
-	if chunk.SampleFrames() != 2 {
-		t.Errorf("sample frames is %d, want %d", chunk.SampleFrames(), 2)
-	}
-
-	if chunk.SampleSize() != 3 {
-		t.Errorf("sample size is %d, want %d", chunk.SampleSize(), 3)
-	}
-
-	if chunk.CompressionType() != "NONE" {
-		t.Errorf("compression type is %s, want %s", chunk.CompressionType(), "NONE")
-	}
-
-	if chunk.CompressionName() != "no compression" {
-		t.Errorf("compression name is %s, want %s", chunk.CompressionName(), cName)
-	}
+	assertEqual(t, chunk.Channels(), 1, "Channels")
+	assertEqual(t, chunk.SampleFrames(), 2, "SampleFrames")
+	assertEqual(t, chunk.SampleSize(), 3, "SampleSize")
+	assertEqual(t, chunk.CompressionType(), "NONE", "CompressionType")
+	assertEqual(t, chunk.CompressionName(), "no compression", "CompressionName")
 }
 
 func TestCommBytes(t *testing.T) {

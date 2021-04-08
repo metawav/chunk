@@ -8,83 +8,37 @@ import (
 func TestEncodeFMThunk(t *testing.T) {
 	chunk := EncodeFMTChunk(14, 0, 1, 44100, 1000, 2)
 
-	if chunk.ID() != FMTID {
-		t.Errorf("ID is %s, want %s", chunk.ID(), FMTID)
-	}
-
-	if chunk.Size() != 14 {
-		t.Errorf("size is %d, want %d", chunk.Size(), 14)
-	}
-
-	if chunk.Channels() != 1 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 1)
-	}
-
-	if chunk.SamplesPerSec() != 44100 {
-		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), 44100)
-	}
-
-	if chunk.BytesPerSec() != 1000 {
-		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), 1000)
-	}
-
-	if chunk.BlockAlign() != 2 {
-		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), 2)
-	}
+	assertEqual(t, chunk.ID(), FMTID, "ID")
+	assertEqual(t, chunk.Size(), uint32(14), "Size")
+	assertEqual(t, chunk.Format(), 0, "Format")
+	assertEqual(t, chunk.Channels(), 1, "Channels")
+	assertEqual(t, chunk.SamplesPerSec(), 44100, "SamplesPerSec")
+	assertEqual(t, chunk.BytesPerSec(), 1000, "BytesPerSec")
+	assertEqual(t, chunk.BlockAlign(), 2, "BlockAlign")
 }
 
 func TestDecodeFMTChunk(t *testing.T) {
 	chunk, err := DecodeFMTChunk(nil)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	data := make([]byte, HeaderSizeBytes-1)
 	chunk, err = DecodeFMTChunk(data)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	data = make([]byte, HeaderSizeBytes)
 	chunk, err = DecodeFMTChunk(data)
 
-	if err != nil {
-		t.Errorf("err should be nil")
-	}
-
-	if chunk.Header == nil {
-		t.Errorf("header is nil")
-	}
-
-	if chunk.Format() != 0 {
-		t.Errorf("format is %d, want %d", chunk.Format(), 0)
-	}
-
-	if chunk.Channels() != 0 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 0)
-	}
-
-	if chunk.SamplesPerSec() != 0 {
-		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), 0)
-	}
-
-	if chunk.BytesPerSec() != 0 {
-		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), 0)
-	}
-
-	if chunk.BlockAlign() != 0 {
-		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), 0)
-	}
+	assertNotNil(t, err, "err should not be nil when DecodeFMTChunk with not enough data")
+	assertNotNil(t, chunk.Header, "header should not be nil")
+	assertEqual(t, chunk.Format(), 0, "Format")
+	assertEqual(t, chunk.Channels(), 0, "Channels")
+	assertEqual(t, chunk.SamplesPerSec(), 0, "SamplesPerSec")
+	assertEqual(t, chunk.BytesPerSec(), 0, "BytesPerSec")
+	assertEqual(t, chunk.BlockAlign(), 0, "BlockAlign")
 
 	data2 := make([]byte, 22)
 	var format uint16 = 1
@@ -99,25 +53,11 @@ func TestDecodeFMTChunk(t *testing.T) {
 	binary.LittleEndian.PutUint16(data2[HeaderSizeBytes+12:HeaderSizeBytes+14], blockAlign)
 	chunk, _ = DecodeFMTChunk(data2)
 
-	if chunk.Format() != int(format) {
-		t.Errorf("format is %d, want %d", chunk.Format(), int(format))
-	}
-
-	if chunk.Channels() != int(channels) {
-		t.Errorf("format is %d, want %d", chunk.Channels(), int(channels))
-	}
-
-	if chunk.SamplesPerSec() != int(samplesPerSec) {
-		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), int(samplesPerSec))
-	}
-
-	if chunk.BytesPerSec() != int(bytesPerSec) {
-		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), int(bytesPerSec))
-	}
-
-	if chunk.BlockAlign() != int(blockAlign) {
-		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), int(blockAlign))
-	}
+	assertEqual(t, chunk.Format(), int(format), "Format")
+	assertEqual(t, chunk.Channels(), int(channels), "Channels")
+	assertEqual(t, chunk.SamplesPerSec(), int(samplesPerSec), "SamplesPerSec")
+	assertEqual(t, chunk.BytesPerSec(), int(bytesPerSec), "BytesPerSec")
+	assertEqual(t, chunk.BlockAlign(), int(blockAlign), "BlockAlign")
 }
 
 func TestFMTBytes(t *testing.T) {
@@ -146,57 +86,28 @@ func TestFMTBytes(t *testing.T) {
 func TestEncodePCMFormathunk(t *testing.T) {
 	chunk := EncodePCMFormatChunk(14, 0, 1, 44100, 1000, 2, 24)
 
-	if chunk.ID() != FMTID {
-		t.Errorf("ID is %s, want %s", chunk.ID(), FMTID)
-	}
-
-	if chunk.Size() != 14 {
-		t.Errorf("size is %d, want %d", chunk.Size(), 14)
-	}
-
-	if chunk.Channels() != 1 {
-		t.Errorf("channels is %d, want %d", chunk.Channels(), 1)
-	}
-
-	if chunk.SamplesPerSec() != 44100 {
-		t.Errorf("samples per sec is %d, want %d", chunk.SamplesPerSec(), 44100)
-	}
-
-	if chunk.BytesPerSec() != 1000 {
-		t.Errorf("bytes per sec is %d, want %d", chunk.BytesPerSec(), 1000)
-	}
-
-	if chunk.BlockAlign() != 2 {
-		t.Errorf("block align is %d, want %d", chunk.BlockAlign(), 2)
-	}
-
-	if chunk.BitsPerSample() != 24 {
-		t.Errorf("bits per sample is %d, want %d", chunk.BitsPerSample(), 24)
-	}
+	assertEqual(t, chunk.ID(), FMTID, "ID")
+	assertEqual(t, chunk.Size(), uint32(14), "Size")
+	assertEqual(t, chunk.Format(), 0, "Format")
+	assertEqual(t, chunk.Channels(), 1, "Channels")
+	assertEqual(t, chunk.SamplesPerSec(), 44100, "SamplesPerSec")
+	assertEqual(t, chunk.BytesPerSec(), 1000, "BytesPerSec")
+	assertEqual(t, chunk.BlockAlign(), 2, "BlockAlign")
+	assertEqual(t, chunk.BitsPerSample(), 24, "BitsPerSample")
 }
 
 func TestDecodePCMFormatChunk(t *testing.T) {
 	chunk, err := DecodePCMFormatChunk(nil)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	dataMinSize := 22
 	data := make([]byte, dataMinSize-1)
 	chunk, err = DecodePCMFormatChunk(data)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	fmtData := make([]byte, 22)
 	var format uint16 = 1
@@ -214,28 +125,15 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 	data = make([]byte, len(fmt.Bytes())-1)
 	chunk, err = DecodePCMFormatChunk(data)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk != nil {
-		t.Errorf("chunk should be nil")
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNil(t, chunk, "chunk should be nil")
 
 	data = make([]byte, len(fmt.Bytes()))
 	chunk, err = DecodePCMFormatChunk(data)
 
-	if err == nil {
-		t.Errorf("err should not be nil")
-	}
-
-	if chunk == nil {
-		t.Errorf("chunk should not be nil")
-	}
-
-	if chunk.BitsPerSample() != 0 {
-		t.Errorf("bits per sample is %d, want %d", chunk.BitsPerSample(), 0)
-	}
+	assertNotNil(t, err, "err should not be nil")
+	assertNotNil(t, chunk, "chunk should not be nil")
+	assertEqual(t, chunk.BitsPerSample(), 0, "BitsPerSample")
 
 	data = make([]byte, 2)
 	var bitsPerSample uint16 = 24
@@ -243,13 +141,8 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 	data = append(fmtData, data...)
 	chunk, err = DecodePCMFormatChunk(data)
 
-	if err != nil {
-		t.Errorf("err should be nil")
-	}
-
-	if chunk.BitsPerSample() != int(bitsPerSample) {
-		t.Errorf("bits per sample is %d, want %d", chunk.BitsPerSample(), int(bitsPerSample))
-	}
+	assertNil(t, err, "err should be nil")
+	assertEqual(t, chunk.BitsPerSample(), int(bitsPerSample), "BitsPerSample")
 }
 
 func TestPCMFormatBytes(t *testing.T) {

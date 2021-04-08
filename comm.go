@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/metawav/chunk/internal"
 )
@@ -138,8 +137,6 @@ func DecodeCOMMChunk(data []byte) (*COMM, error) {
 		err := binary.Read(buf, byteOrder, f)
 
 		if err != nil {
-			err = handleError(err)
-
 			return c, err
 		}
 	}
@@ -148,20 +145,10 @@ func DecodeCOMMChunk(data []byte) (*COMM, error) {
 	err := binary.Read(buf, byteOrder, &compressionName)
 
 	if err != nil {
-		err = handleError(err)
-
 		return c, err
 	}
 
 	c.compressionName = append(c.compressionName, compressionName...)
 
 	return c, nil
-}
-
-func handleError(err error) error {
-	if err == io.EOF {
-		return nil
-	}
-
-	return err
 }
