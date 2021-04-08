@@ -67,8 +67,8 @@ func (fc *FMT) Bytes() []byte {
 	byteOrder.PutUint32(data[8:12], fc.bytesPerSec)
 	byteOrder.PutUint16(data[12:14], fc.blockAlign)
 	dataSize := len(data)
-	fc.Header = EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
-	bytes := append(fc.Header.Bytes(), data...)
+	header := EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
+	bytes := append(header.Bytes(), data...)
 
 	return pad(bytes)
 }
@@ -100,7 +100,6 @@ func DecodeFMTChunk(data []byte) (*FMT, error) {
 	byteOrder := binary.LittleEndian
 	fc.Header = decodeChunkHeader(data[:HeaderSizeBytes], 0, byteOrder)
 	buf := bytes.NewReader(data[HeaderSizeBytes:])
-
 	fields := []interface{}{&fc.format, &fc.channels, &fc.samplesPerSec, &fc.bytesPerSec, &fc.blockAlign}
 
 	for _, f := range fields {
@@ -146,8 +145,8 @@ func (pfc *PCMFormat) Bytes() []byte {
 	fmtBytes := pfc.FMT.Bytes()
 	data = append(fmtBytes[HeaderSizeBytes:], data...)
 	dataSize := len(data)
-	pfc.Header = EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
-	bytes := append(pfc.Header.Bytes(), data...)
+	header := EncodeChunkHeader(CreateFourCC(FMTID), uint32(dataSize), byteOrder)
+	bytes := append(header.Bytes(), data...)
 
 	return pad(bytes)
 }
@@ -171,19 +170,14 @@ func DecodePCMFormatChunk(data []byte) (*PCMFormat, error) {
 		return nil, err
 	}
 
-	pfc := &PCMFormat{FMT: fc}
-
 	if len(data) < len(fc.Bytes()) {
 		msg := fmt.Sprintf("data slice requires a minimim lenght of %d", len(fc.Bytes()))
 		return nil, errors.New(msg)
 	}
 
+	pfc := &PCMFormat{FMT: fc}
 	buf := bytes.NewReader(data[len(fc.Bytes()):])
 	err = binary.Read(buf, binary.LittleEndian, &pfc.bitsPerSample)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return pfc, nil
+	return pfc, err
 }

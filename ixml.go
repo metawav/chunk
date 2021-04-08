@@ -242,8 +242,8 @@ func (c *IXML) Bytes() ([]byte, error) {
 	}
 
 	dataSize := len(data)
-	c.Header = EncodeChunkHeader(CreateFourCC(IXMLID), uint32(dataSize), binary.LittleEndian)
-	bytes := append(c.Header.Bytes(), data...)
+	header := EncodeChunkHeader(CreateFourCC(IXMLID), uint32(dataSize), binary.LittleEndian)
+	bytes := append(header.Bytes(), data...)
 
 	return pad(bytes), nil
 }

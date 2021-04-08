@@ -121,7 +121,8 @@ func TestDecodeFMTChunk(t *testing.T) {
 }
 
 func TestFMTBytes(t *testing.T) {
-	data := make([]byte, 22)
+	const formatSize = 22
+	data := make([]byte, formatSize)
 	var format uint16 = 1
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes:HeaderSizeBytes+2], format)
 	var channels uint16 = 2
@@ -134,8 +135,12 @@ func TestFMTBytes(t *testing.T) {
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+12:HeaderSizeBytes+14], blockAlign)
 	chunk, _ := DecodeFMTChunk(data)
 
-	assertEqual(t, len(chunk.Bytes()), len(data), "bytes length after DecodeFMTChunk")
-	assertEqual(t, chunk.Size(), uint32(len(data))-HeaderSizeBytes, "size after DecodeFMTChunk")
+	assertEqual(t, len(chunk.Bytes()), formatSize, "bytes length after DecodeFMTChunk")
+
+	data = make([]byte, 8)
+	chunk, _ = DecodeFMTChunk(data)
+
+	assertEqual(t, len(chunk.Bytes()), formatSize, "bytes length after DecodeFMTChunk")
 }
 
 func TestEncodePCMFormathunk(t *testing.T) {
@@ -214,7 +219,22 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 	}
 
 	if chunk != nil {
-		t.Errorf("chunk should be be nil")
+		t.Errorf("chunk should be nil")
+	}
+
+	data = make([]byte, len(fmt.Bytes()))
+	chunk, err = DecodePCMFormatChunk(data)
+
+	if err == nil {
+		t.Errorf("err should not be nil")
+	}
+
+	if chunk == nil {
+		t.Errorf("chunk should not be nil")
+	}
+
+	if chunk.BitsPerSample() != 0 {
+		t.Errorf("bits per sample is %d, want %d", chunk.BitsPerSample(), 0)
 	}
 
 	data = make([]byte, 2)
@@ -233,7 +253,8 @@ func TestDecodePCMFormatChunk(t *testing.T) {
 }
 
 func TestPCMFormatBytes(t *testing.T) {
-	data := make([]byte, 24)
+	const pcmFormatSize = 24
+	data := make([]byte, pcmFormatSize)
 	var format uint16 = 1
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes:HeaderSizeBytes+2], format)
 	var channels uint16 = 2
@@ -248,6 +269,15 @@ func TestPCMFormatBytes(t *testing.T) {
 	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+14:HeaderSizeBytes+16], bitsPerSample)
 	chunk, _ := DecodePCMFormatChunk(data)
 
-	assertEqual(t, len(chunk.Bytes()), len(data), "bytes length after DecodePCMFormatChunk")
-	assertEqual(t, chunk.Size(), uint32(len(data))-HeaderSizeBytes, "size after DecodePCMFormatChunk")
+	assertEqual(t, len(chunk.Bytes()), pcmFormatSize, "bytes length after DecodePCMFormatChunk")
+
+	data = make([]byte, 22)
+	binary.LittleEndian.PutUint16(data[HeaderSizeBytes:HeaderSizeBytes+2], format)
+	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+2:HeaderSizeBytes+4], channels)
+	binary.LittleEndian.PutUint32(data[HeaderSizeBytes+4:HeaderSizeBytes+8], samplesPerSec)
+	binary.LittleEndian.PutUint32(data[HeaderSizeBytes+8:HeaderSizeBytes+12], bytesPerSec)
+	binary.LittleEndian.PutUint16(data[HeaderSizeBytes+12:HeaderSizeBytes+14], blockAlign)
+	chunk, _ = DecodePCMFormatChunk(data)
+
+	assertEqual(t, len(chunk.Bytes()), pcmFormatSize, "bytes length after DecodePCMFormatChunk")
 }

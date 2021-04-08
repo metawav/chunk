@@ -1,26 +1,21 @@
 package chunk
 
 import (
-	"encoding/binary"
 	"strconv"
 	"testing"
 )
 
 func TestIXML(t *testing.T) {
 	chunk := &IXML{}
-
-	headerSize := uint32(12)
-	header := EncodeChunkHeader(CreateFourCC(IXMLID), headerSize, binary.LittleEndian)
-	chunk.Header = header
 	bytes, err := chunk.Bytes()
 
 	assertNil(t, err, "err when Bytes of IXML")
 	assertEqual(t, len(bytes), 26, "bytes length after DecodeIXMLChunk")
 
 	ixml, err := DecodeIXMLChunk(bytes)
-	assertEqual(t, chunk.ID(), IXMLID, "id")
-	assertEqual(t, chunk.Size(), 25-HeaderSizeBytes, "size")
-	assertEqual(t, chunk.HasPadding(), true, "padding")
+	assertEqual(t, ixml.ID(), IXMLID, "id after DecodeIXMLChunk")
+	assertEqual(t, ixml.Size(), 25-HeaderSizeBytes, "size after DecodeIXMLChunk")
+	assertEqual(t, ixml.HasPadding(), true, "padding after DecodeIXMLChunk")
 
 	chunk.IXMLVersion = "version"
 	chunk.Project = "project"
@@ -171,7 +166,14 @@ func TestIXML(t *testing.T) {
 	assertNil(t, err, "err")
 
 	ixml, _ = DecodeIXMLChunk(bytes)
-	assertEqual(t, ixml.Size(), chunk.Size(), "size after DecodeIXMLChunk")
+
+	expectedSize := len(bytes) - int(HeaderSizeBytes)
+
+	if ixml.HasPadding() {
+		expectedSize -= 1
+	}
+
+	assertEqual(t, ixml.Size(), uint32(expectedSize), "size after DecodeIXMLChunk")
 
 	assertEqual(t, ixml.Bext.Description, chunk.Bext.Description, "bext description")
 	assertEqual(t, ixml.Bext.Originator, chunk.Bext.Originator, "bext originator")

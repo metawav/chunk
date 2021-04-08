@@ -367,8 +367,8 @@ func (b *Bext) Bytes() []byte {
 
 	data = append(data, b.codingHistory...)
 	dataSize := len(data)
-	b.Header = EncodeChunkHeader(CreateFourCC(BEXTID), uint32(dataSize), byteOrder)
-	bytes := append(b.Header.Bytes(), data...)
+	header := EncodeChunkHeader(CreateFourCC(BEXTID), uint32(dataSize), byteOrder)
+	bytes := append(header.Bytes(), data...)
 
 	return pad(bytes)
 }

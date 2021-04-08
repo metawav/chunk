@@ -165,7 +165,6 @@ func TestCommBytes(t *testing.T) {
 	bytes := chunk.Bytes()
 
 	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
-	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 
 	compressionName := createTestString(14)
 	expectedData = make([]byte, 30+14+2)
@@ -173,7 +172,6 @@ func TestCommBytes(t *testing.T) {
 	bytes = chunk.Bytes()
 
 	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
-	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 
 	compressionName = createTestString(255)
 	expectedData = make([]byte, 30+256)
@@ -181,7 +179,6 @@ func TestCommBytes(t *testing.T) {
 	bytes = chunk.Bytes()
 
 	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
-	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 
 	compressionName = createTestString(256)
 	expectedData = make([]byte, 30+256)
@@ -189,5 +186,4 @@ func TestCommBytes(t *testing.T) {
 	bytes = chunk.Bytes()
 
 	assertEqual(t, len(bytes), len(expectedData), "bytes length after EncodeCOMMChunk")
-	assertEqual(t, chunk.Size(), uint32(len(expectedData))-HeaderSizeBytes, "size after EncodeCOMMChunk")
 }

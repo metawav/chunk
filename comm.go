@@ -88,8 +88,8 @@ func (c *COMM) Bytes() []byte {
 	}
 
 	dataSize := len(data)
-	c.Header = EncodeChunkHeader(CreateFourCC(COMMID), uint32(dataSize), byteOrder)
-	bytes := append(c.Header.Bytes(), data...)
+	header := EncodeChunkHeader(CreateFourCC(COMMID), uint32(dataSize), byteOrder)
+	bytes := append(header.Bytes(), data...)
 
 	return pad(bytes)
 }
