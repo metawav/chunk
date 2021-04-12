@@ -44,7 +44,7 @@ func (fc *FMT) BlockAlign() int {
 
 // String returns string represensation of chunk.
 func (fc *FMT) String() string {
-	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBytes per sample: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
+	return fmt.Sprintf("Format: %d\nChannels: %d\nSample rate: %d\nByte rate: %d\nBlock align: %d", fc.Format(), fc.Channels(), fc.SamplesPerSec(), fc.BytesPerSec(), fc.BlockAlign())
 }
 
 // Bytes converts FMT to byte array. A new Header with id 'fmt ' is created.
