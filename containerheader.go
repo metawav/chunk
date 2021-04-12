@@ -29,11 +29,8 @@ func (rh *ContainerHeader) String() string {
 // An amount of 12 bytes is returned.
 func (rh *ContainerHeader) Bytes() []byte {
 	bytes := rh.Header.Bytes()
-
 	data := make([]byte, 4)
-
-	rh.Header.byteOrder.PutUint32(data[0:4], rh.format)
-
+	binary.BigEndian.PutUint32(data[0:4], rh.format)
 	bytes = append(bytes, data...)
 
 	return bytes
