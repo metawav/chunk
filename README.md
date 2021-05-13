@@ -1,4 +1,7 @@
-# chunk [![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
+# chunk 
+![Build Status](https://github.com/github/metawav/chunk/actions/workflows/go_build_and_test.yml/badge.svg)
+[![GoDoc](https://godoc.org/github.com/metawav/chunk?status.svg)](https://godoc.org/github.com/metawav/chunk)
+
 Library for decoding and encoding chunked audio containers like RIFF / AIFF.
 
 ## Features
